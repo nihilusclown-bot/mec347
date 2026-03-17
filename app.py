@@ -17,7 +17,6 @@ c.execute('''CREATE TABLE IF NOT EXISTS users (
              id INTEGER PRIMARY KEY, nome TEXT UNIQUE, email TEXT, senha TEXT, 
              funcao TEXT, funcao_custom TEXT)''')
 
-# Migração segura: adiciona coluna email se não existir (sem UNIQUE no ALTER)
 columns = [row[1] for row in c.execute("PRAGMA table_info(users)").fetchall()]
 if 'email' not in columns:
     c.execute("ALTER TABLE users ADD COLUMN email TEXT")
@@ -25,14 +24,13 @@ if 'email' not in columns:
     c.execute("UPDATE users SET email = 'admin@exemplo.com' WHERE nome = 'admin' AND email IS NULL")
     conn.commit()
 
-# Usuário admin automático
 c.execute("SELECT nome FROM users WHERE nome='admin'")
 if not c.fetchone():
     c.execute("INSERT INTO users (nome, email, senha, funcao, funcao_custom) VALUES (?,?,?,?,?)",
               ("admin", "admin@exemplo.com", "mec347", "Administrador", None))
     conn.commit()
 
-# ==================== SESSÃO E LOGIN (VERSÃO FINAL ESTÁVEL) ====================
+# ==================== SESSÃO E LOGIN (VERSÃO FINAL CORRIGIDA) ====================
 if "user" not in st.session_state:
     st.session_state.user = None
 
@@ -40,43 +38,57 @@ if not st.session_state.user:
     st.title("🛠️ Controle de Peças QR - Login")
     st.markdown("**Projeto Integrador MEC-3-47**")
     
-    tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔑 Esqueci minha senha"])
+    tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
 
     # ====================== LOGIN ======================
     with tab_login:
-        nome_ou_email = st.text_input("Nome de usuário ou E-mail")
-        senha = st.text_input("Senha", type="password")
-        if st.button("Entrar"):
-            df_user = pd.read_sql(f"""
-                SELECT * FROM users 
-                WHERE (nome = '{nome_ou_email}' OR email = '{nome_ou_email}') 
-                AND senha = '{senha}'
-            """, conn)
-            if not df_user.empty:
-                st.session_state.user = df_user.iloc[0].to_dict()
-                st.rerun()
-            else:
-                st.error("Usuário, e-mail ou senha incorretos!")
+        with st.form("login_form"):
+            nome_ou_email = st.text_input("Nome de usuário ou E-mail")
+            senha = st.text_input("Senha", type="password")
+            submitted = st.form_submit_button("Entrar", use_container_width=True)
+            
+            if submitted:
+                if nome_ou_email and senha:
+                    df_user = pd.read_sql(f"""
+                        SELECT * FROM users 
+                        WHERE (nome = '{nome_ou_email}' OR email = '{nome_ou_email}') 
+                        AND senha = '{senha}'
+                    """, conn)
+                    if not df_user.empty:
+                        st.session_state.user = df_user.iloc[0].to_dict()
+                        st.rerun()
+                    else:
+                        st.error("Usuário, e-mail ou senha incorretos!")
+                else:
+                    st.error("Preencha todos os campos!")
 
-    # ====================== CADASTRO (AGORA LIMPA E MOSTRA MENSAGEM) ======================
+         # ====================== CADASTRO ======================
     with tab_register:
+        # Mensagem no topo da aba (centralizada e grande)
+        if st.session_state.get("cadastro_sucesso", False):
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                st.success("✅ Usuário cadastrado com sucesso!", icon="🎉")
+            st.session_state.cadastro_sucesso = False
+
         novo_nome = st.text_input("Nome completo (será seu login)")
         novo_email = st.text_input("E-mail válido")
         nova_senha = st.text_input("Escolha uma senha", type="password")
         funcao = st.selectbox("Função", ["Operador", "Inspetor de Qualidade", "Outros"])
         funcao_custom = st.text_input("Função na empresa") if funcao == "Outros" else None
         
-        if st.button("Cadastrar Usuário"):
+        if st.button("Cadastrar Usuário", use_container_width=True):
             if novo_nome and novo_email and nova_senha:
-                if "@" in novo_email and "." in novo_email:
+                if "@" in novo_email and "." in novo_email and len(novo_email.split('@')) == 2:
                     try:
                         c.execute("""INSERT INTO users 
                                      (nome, email, senha, funcao, funcao_custom) 
                                      VALUES (?,?,?,?,?)""",
                                   (novo_nome, novo_email, nova_senha, funcao, funcao_custom))
                         conn.commit()
-                        st.success("✅ Usuário cadastrado com sucesso!")
-                        st.rerun()   # ← Limpa o formulário automaticamente
+                        
+                        st.session_state.cadastro_sucesso = True
+                        st.rerun()   # limpa os campos automaticamente
                     except sqlite3.IntegrityError:
                         st.error("Esse nome ou e-mail já está cadastrado!")
                 else:
@@ -121,7 +133,7 @@ menu_options = [
 menu = st.sidebar.radio("Menu", menu_options, key="main_menu")
 
 # ==================== CONFIGURAÇÕES GLOBAIS ====================
-APP_URL = "https://SEU-APP-AQUI.streamlit.app"   # ← TROQUE PELO LINK REAL DO SEU APP
+APP_URL = "https://mec347.streamlit.app"
 
 CORES = {
     "Usinagem": "#1E90FF",
@@ -421,19 +433,101 @@ elif menu == "📖 Histórico por Peça":
 # ==================== PRODUTIVIDADE ====================
 elif menu == "📈 Produtividade":
     st.header("📈 Produtividade da Equipe")
-    df_hist = pd.read_sql("SELECT * FROM historico", conn)
-    if not df_hist.empty:
-        st.subheader("🔧 Operadores (Peças cadastradas)")
-        op = df_hist[df_hist['status'] == 'Início'].groupby('responsavel').size().reset_index(name='Total')
-        st.dataframe(op)
-        st.bar_chart(op.set_index('responsavel')['Total'])
-        
-        st.subheader("🔍 Inspetores (Peças inspecionadas/concluídas)")
-        insp = df_hist[df_hist['status'].isin(['Atualizado', 'Concluída'])].groupby('responsavel').size().reset_index(name='Total')
-        st.dataframe(insp)
-        st.bar_chart(insp.set_index('responsavel')['Total'])
+    
+    df_hist = pd.read_sql("""
+        SELECT h.*, p.etapa as etapa_atual,
+               substr(h.data,7,4) || '-' || substr(h.data,4,2) as mes
+        FROM historico h 
+        LEFT JOIN pecas p ON h.qr_code = p.qr_code
+    """, conn)
+    
+    if df_hist.empty:
+        st.info("Ainda não há dados de produtividade.")
     else:
-        st.info("Ainda não há dados.")
+        # Filtro sem duplicação do mês atual
+        meses_unicos = sorted(df_hist['mes'].unique(), reverse=True)
+        mes_atual = datetime.now().strftime("%Y-%m")
+        
+        meses_anteriores = [m for m in meses_unicos if m != mes_atual]
+        
+        opcoes_filtro = ["Mês Atual", "Acumulado do Ano", "─"] + meses_anteriores
+        
+        periodo = st.selectbox("Período", opcoes_filtro, index=0)
+        
+        # Aplica filtro
+        if periodo == "Mês Atual":
+            df_filtrado = df_hist[df_hist['mes'] == mes_atual]
+        elif periodo == "Acumulado do Ano":
+            df_filtrado = df_hist.copy()
+        elif periodo != "─":
+            df_filtrado = df_hist[df_hist['mes'] == periodo]
+        else:
+            df_filtrado = df_hist.copy()
+
+        tab_op, tab_insp, tab_top3, tab_geral = st.tabs(["🔧 Operadores", "🔍 Inspetores", "🏆 Top 3", "📊 Ranking Geral da Fábrica"])
+
+        # ====================== OPERADORES ======================
+        with tab_op:
+            st.subheader("Desempenho dos Operadores")
+            op = df_filtrado[df_filtrado['status'] == 'Início'].groupby('responsavel').agg(
+                Total_Cadastradas=('qr_code', 'nunique')
+            ).reset_index()
+            
+            concluidas = df_filtrado[df_filtrado['status'] == 'Concluída'].groupby('responsavel').agg(
+                Concluidas=('qr_code', 'nunique'),
+                Aprovadas=('status', lambda x: (x == 'Concluída').sum()),
+                Retrabalho=('etapa_atual', lambda x: (x == 'Retrabalho/Não Conforme').sum())
+            ).reset_index()
+            
+            op = op.merge(concluidas, on='responsavel', how='left').fillna(0)
+            op = op.astype({'Total_Cadastradas': 'int', 'Concluidas': 'int', 'Aprovadas': 'int', 'Retrabalho': 'int'})
+            
+            op['Taxa_Conclusao_%'] = (op['Concluidas'] / op['Total_Cadastradas'] * 100).round(1)
+            op['Taxa_Aprovacao_%'] = (op['Aprovadas'] / op['Concluidas'] * 100).round(1) if op['Concluidas'].sum() > 0 else 0
+            
+            st.dataframe(op, use_container_width=True)
+
+        # ====================== INSPETORES ======================
+        with tab_insp:
+            st.subheader("Desempenho dos Inspetores")
+            insp = df_filtrado[df_filtrado['status'].isin(['Atualizado', 'Concluída'])].groupby('responsavel').agg(
+                Total_Inspecionadas=('id', 'count'),
+                Aprovadas=('status', lambda x: (x == 'Concluída').sum()),
+                Reprovadas=('status', lambda x: (x == 'Concluída').sum())
+            ).reset_index()
+            
+            insp = insp.astype({'Total_Inspecionadas': 'int', 'Aprovadas': 'int', 'Reprovadas': 'int'})
+            insp['Taxa_Aprovacao_%'] = (insp['Aprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
+            insp['Taxa_Reprovacao_%'] = (insp['Reprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
+            
+            st.dataframe(insp, use_container_width=True)
+
+        # ====================== TOP 3 ======================
+        with tab_top3:
+            st.subheader("🏆 Top 3 Operadores")
+            top_op = op.nlargest(3, 'Total_Cadastradas')[['responsavel', 'Total_Cadastradas', 'Taxa_Aprovacao_%', 'Taxa_Conclusao_%']]
+            st.dataframe(top_op, use_container_width=True)
+            
+            st.subheader("🏆 Top 3 Inspetores")
+            top_insp = insp.nlargest(3, 'Total_Inspecionadas')[['responsavel', 'Total_Inspecionadas', 'Taxa_Aprovacao_%']]
+            st.dataframe(top_insp, use_container_width=True)
+
+        # ====================== RANKING GERAL ======================
+        with tab_geral:
+            st.subheader("📊 Ranking Geral da Fábrica")
+            geral = pd.DataFrame({
+                'Métrica': ['Total de Peças Cadastradas', 'Em Inspeção Preliminar', 'Em Retrabalho/Não Conforme', 
+                           'Em Inspeção Final', 'Aprovadas', 'Reprovadas'],
+                'Quantidade': [
+                    len(df_filtrado[df_filtrado['status'] == 'Início']),
+                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Preliminar']),
+                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Retrabalho/Não Conforme']),
+                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Final']),
+                    len(df_filtrado[df_filtrado['status'] == 'Concluída']),
+                    len(df_filtrado[df_filtrado['status'] == 'Concluída'])
+                ]
+            })
+            st.dataframe(geral, use_container_width=True, hide_index=True)
 
 # ==================== GERAR ETIQUETA ====================
 elif menu == "🖨️ Gerar Etiqueta":
