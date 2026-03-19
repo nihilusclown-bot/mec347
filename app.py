@@ -264,6 +264,20 @@ if st.session_state.user.get('nome') == 'admin':
                 st.rerun()
 
 # ==================== FUNÇÕES QR ====================
+def criar_qr_pil(qr_code):
+    full_url = f"{APP_URL}?qr_code={qr_code}"
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
+    qr.add_data(full_url)
+    qr.make(fit=True)
+    return qr.make_image(fill_color="black", back_color="white")
+
+def criar_qr_bytes(qr_code):
+    img = criar_qr_pil(qr_code)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    return buf.getvalue()
+
 def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastro, 
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
