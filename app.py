@@ -314,7 +314,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     texto(120, 700, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
-# ==================== CADASTRO DE PEÇAS ====================
+# ==================== CADASTRAR NOVA PEÇA ====================
 if menu == "➕ Cadastrar Nova Peça":
     if st.session_state.user['funcao'] not in ["Operador", "Gestor", "Supervisor", "Administrador"]:
         st.error("❌ Você não tem permissão para cadastrar peças.")
@@ -392,35 +392,7 @@ if menu == "➕ Cadastrar Nova Peça":
                     if key in st.session_state:
                         del st.session_state[key]
                 st.rerun()
-    
-    # ==================== DOWNLOAD E BOTÃO CADASTRAR NOVA PEÇA ====================
-    if st.session_state.get("last_pdf"):
-        qr = st.session_state.last_pdf
       
-        df_tipo = pd.read_sql(f"SELECT tipo_peca FROM pecas WHERE qr_code = '{qr}'", conn)
-        tipo_peca = df_tipo.iloc[0]['tipo_peca'] if not df_tipo.empty else "Desconhecido"
-        
-        img = gerar_etiqueta(qr, tipo_peca, etapa_inicial)
-        buf = io.BytesIO()
-        img.save(buf, format="PDF", resolution=300)
-        buf.seek(0)
-        
-        st.download_button(
-            label="📄 **BAIXAR ETIQUETA COM QR CODE**",
-            data=buf.getvalue(),
-            file_name=f"etiqueta_{qr}.pdf",
-            mime="application/pdf",
-            type="primary",
-            use_container_width=True
-        )
-        
-        if st.button("🧹 Cadastrar nova peça", type="secondary", use_container_width=True):
-            # Limpa TODOS os campos do formulário
-            for key in ["cad_tipo", "cad_etapa", "cad_obs", "cad_desenho", "last_pdf"]:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.rerun()
-
 # ==================== ATUALIZAR STATUS ====================
 elif menu == "🔄 Atualizar Status":
     st.header("Atualizar Status da Peça")
