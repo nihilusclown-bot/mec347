@@ -282,10 +282,9 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
-    img = Image.new("RGB", (2600, 1400), color=cor_hex)
+    img = Image.new("RGB", (2600, 1600), color=cor_hex)
     draw = ImageDraw.Draw(img)
     
-    # Fontes grandes com fallback seguro (funciona no Streamlit Cloud)
     try:
         font_titulo = ImageFont.truetype("arial.ttf", 190)
         font_normal = ImageFont.truetype("arial.ttf", 115)
@@ -295,14 +294,12 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
         font_normal = ImageFont.load_default()
         font_status = ImageFont.load_default()
     
-    # QR Code grande
     qr_img = criar_qr_pil(qr_code).resize((720, 720), Image.LANCZOS)
     img.paste(qr_img, (1750, 350))
     
-    # Sombra forte + texto preto
-    def texto(x, y, texto, font):
+    def texto(x, y, texto, font, cor="black"):
         draw.text((x+8, y+8), texto, font=font, fill="#111111")
-        draw.text((x, y), texto, font=font, fill="black")
+        draw.text((x, y), texto, font=font, fill=cor)
     
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
     texto(120, 300, f"Tipo: {tipo_peca}", font_normal)
@@ -313,6 +310,10 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
     texto(120, 740, f"Status atual: {status_texto}", font_status)
     texto(120, 850, f"Atualizado por: {atualizado_por}", font_normal)
+    
+    # TESTE EXTREMO VERMELHO GIGANTE (para provar que a nova versão chegou)
+    draw.text((120, 1100), "TESTE - FONTE GIGANTE CARREGADA!", 
+              font=ImageFont.load_default(), fill="red")
     
     return img
 # ==================== CADASTRAR NOVA PEÇA ====================
