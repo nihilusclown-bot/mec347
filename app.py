@@ -264,20 +264,6 @@ if st.session_state.user.get('nome') == 'admin':
                 st.rerun()
 
 # ==================== FUNÇÕES QR ====================
-def criar_qr_pil(qr_code):
-    full_url = f"{APP_URL}?qr_code={qr_code}"
-    qr = qrcode.QRCode(version=1, box_size=10, border=4)
-    qr.add_data(full_url)
-    qr.make(fit=True)
-    return qr.make_image(fill_color="black", back_color="white")
-
-def criar_qr_bytes(qr_code):
-    img = criar_qr_pil(qr_code)
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    buf.seek(0)
-    return buf.getvalue()
-
 def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastro, 
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
@@ -285,26 +271,23 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     img = Image.new("RGB", (2600, 1400), color=cor_hex)
     draw = ImageDraw.Draw(img)
     
-    # Fontes grandes com fallback seguro
+    # Fontes enormes + sombra forte
     try:
-        font_titulo = ImageFont.truetype("arial.ttf", 170)
-        font_normal = ImageFont.truetype("arial.ttf", 105)
-        font_status = ImageFont.truetype("arial.ttf", 78)
+        font_titulo = ImageFont.truetype("arial.ttf", 190)
+        font_normal = ImageFont.truetype("arial.ttf", 115)
+        font_status = ImageFont.truetype("arial.ttf", 85)
     except:
         font_titulo = ImageFont.load_default()
         font_normal = ImageFont.load_default()
         font_status = ImageFont.load_default()
     
-    # QR Code grande
     qr_img = criar_qr_pil(qr_code).resize((720, 720), Image.LANCZOS)
     img.paste(qr_img, (1750, 350))
     
-    # Sombra forte
-    def texto(x, y, texto, font):
-        draw.text((x+6, y+6), texto, font=font, fill="#111111")
-        draw.text((x, y), texto, font=font, fill="black")
+    def texto(x, y, texto, font, cor="black"):
+        draw.text((x+8, y+8), texto, font=font, fill="#111111")
+        draw.text((x, y), texto, font=font, fill=cor)
     
-    # Layout completo
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
     texto(120, 300, f"Tipo: {tipo_peca}", font_normal)
     texto(120, 410, f"Cadastrado por: {cadastrado_por}", font_normal)
@@ -314,6 +297,10 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
     texto(120, 740, f"Status atual: {status_texto}", font_status)
     texto(120, 850, f"Atualizado por: {atualizado_por}", font_normal)
+    
+    # TEXTO DE TESTE GIGANTE VERMELHO (para provar que a nova versão carregou)
+    draw.text((120, 1050), "VERSÃO NOVA CARREGADA - FONTE GIGANTE", 
+              font=ImageFont.truetype("arial.ttf", 160), fill="red")
     
     return img
 # ==================== CADASTRAR NOVA PEÇA ====================
