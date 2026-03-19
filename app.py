@@ -277,22 +277,17 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     
     img = Image.new("RGB", (2800, 1600), color=cor_hex)
     draw = ImageDraw.Draw(img)
-    
-    # Usa apenas a fonte padrão do servidor (sempre disponível)
+        
     font = ImageFont.load_default()
-    
-    # QR Code grande
+       
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1850, 380))
-    
-    # Simula fonte grande e grossa (desenhando várias vezes)
+       
     def texto(x, y, texto):
-        for dx in range(-8, 9):
-            for dy in range(-8, 9):
-                draw.text((x + dx, y + dy), texto, font=font, fill="#111111")
+        draw.text((x+6, y+6), texto, font=font, fill="#111111")
         draw.text((x, y), texto, font=font, fill="black")
     
-    # Layout completo que você pediu
+    # Layout completo
     texto(120, 140, f"Nº: {qr_code}")
     texto(120, 310, f"Tipo: {tipo_peca}")
     texto(120, 430, f"Cadastrado por: {cadastrado_por}")
