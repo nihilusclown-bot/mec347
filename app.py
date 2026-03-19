@@ -278,33 +278,38 @@ def criar_qr_bytes(qr_code):
     buf.seek(0)
     return buf.getvalue()
 
-def gerar_etiqueta(qr_code, tipo_peca, cor_nome):
-    cor_hex = CORES[cor_nome]
+def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastro, 
+                   etapa_atual, data_atualizacao, atualizado_por):
+    cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
     img = Image.new("RGB", (1800, 900), color=cor_hex)
     draw = ImageDraw.Draw(img)
     
     try:
-        font_titulo = ImageFont.truetype("arial.ttf", 65)
-        font_normal = ImageFont.truetype("arial.ttf", 46)
-        font_pequena = ImageFont.truetype("arial.ttf", 40)
+        font_titulo = ImageFont.truetype("arial.ttf", 92)
+        font_normal = ImageFont.truetype("arial.ttf", 58)
+        font_pequena = ImageFont.truetype("arial.ttf", 48)
     except:
         font_titulo = ImageFont.load_default()
         font_normal = ImageFont.load_default()
         font_pequena = ImageFont.load_default()
     
-    qr_img = criar_qr_pil(qr_code).resize((420, 420), Image.LANCZOS)
-    img.paste(qr_img, (1180, 220))
+    qr_img = criar_qr_pil(qr_code).resize((480, 480), Image.LANCZOS)
+    img.paste(qr_img, (1200, 200))
     
-    # Sombra MÍNIMA (1 pixel só, cor cinza bem clara)
-    def texto_limpo(x, y, texto, font):
-        draw.text((x+1, y+1), texto, font=font, fill="#2a2a2a")   # sombra suave
-        draw.text((x, y), texto, font=font, fill="black")
+    def texto(x, y, texto, font, cor="black"):
+        draw.text((x+2, y+2), texto, font=font, fill="#2a2a2a")
+        draw.text((x, y), texto, font=font, fill=cor)
     
-    texto_limpo(80, 90,  f"Nº: {qr_code}",     font_titulo)
-    texto_limpo(80, 215, f"Tipo: {tipo_peca}", font_normal)
-    texto_limpo(80, 320, f"Etapa: {cor_nome}", font_normal)
-    texto_limpo(80, 470, "Escaneie para atualizar", font_pequena)
+    texto(80, 80,  f"Nº {qr_code}", font_titulo)
+    texto(80, 190, f"Tipo: {tipo_peca}", font_normal)
+    texto(80, 270, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(80, 350, f"Responsável: {responsavel}", font_normal)
+    texto(80, 430, f"Data de cadastro: {data_cadastro}", font_normal)
+    
+    status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
+    texto(80, 510, f"Status atual: {status_texto}", font_pequena)
+    texto(80, 590, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
 
@@ -731,7 +736,6 @@ elif menu == "📈 Produtividade":
 elif menu == "🖨️ Gerar Etiqueta":
     st.header("Gerar Etiqueta Colorida")
     
-    # Lista de peças não concluídas
     df_nao_concluidas = pd.read_sql("""
         SELECT qr_code, tipo_peca 
         FROM pecas 
@@ -744,15 +748,12 @@ elif menu == "🖨️ Gerar Etiqueta":
         for _, row in df_nao_concluidas.iterrows()
     ]
     
-    escolha = st.selectbox(
-        "Selecione a peça ou digite o código",
-        opcoes
-    )
+    escolha = st.selectbox("Selecione a peça ou digite o código", opcoes)
         
     if escolha == "🔍 Digitar código manualmente":
         qr_input = st.text_input("Digite o QR Code da peça manualmente")
     else:
-        qr_input = escolha.split(" - ")[0]   # pega o código automaticamente
+        qr_input = escolha.split(" - ")[0]
     
     if qr_input:
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr_input}'", conn)
