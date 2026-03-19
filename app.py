@@ -328,7 +328,7 @@ if menu == "➕ Cadastrar Nova Peça":
     else:
         responsavel_selecionado = st.session_state.user['nome']
     
-    with st.form("cadastro_nova_peca", clear_on_submit=True):  # ← força limpeza automática
+    with st.form("cadastro_nova_peca", clear_on_submit=True):
         tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)", key="cad_tipo")
         etapa_inicial = st.selectbox("Etapa Inicial", ["Usinagem"], key="cad_etapa")
         obs = st.text_area("Observações iniciais", key="cad_obs")
@@ -356,6 +356,44 @@ if menu == "➕ Cadastrar Nova Peça":
             st.success(f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**")
             st.session_state.last_pdf = qr_code
             st.rerun()
+    
+    # ==================== DOWNLOAD DA ETIQUETA ====================
+    if st.session_state.get("last_pdf"):
+        qr = st.session_state.last_pdf
+        
+        df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
+        if not df.empty:
+            peca = df.iloc[0]
+            
+            img = gerar_etiqueta(
+                qr_code=qr,
+                tipo_peca=peca["tipo_peca"],
+                cadastrado_por=responsavel_selecionado,
+                responsavel=responsavel_selecionado,
+                data_cadastro=peca["data_cadastro"],
+                etapa_atual=peca["etapa"],
+                data_atualizacao=peca["data_cadastro"],   
+                atualizado_por=f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
+            )
+            
+            buf = io.BytesIO()
+            img.save(buf, format="PDF", resolution=300)
+            buf.seek(0)
+            
+            st.download_button(
+                label="📄 **BAIXAR ETIQUETA**",
+                data=buf.getvalue(),
+                file_name=f"etiqueta_{qr}.pdf",
+                mime="application/pdf",
+                type="primary",
+                use_container_width=True
+            )
+            
+            if st.button("🧹 Limpar formulário e preparar nova peça", type="secondary", use_container_width=True):
+                for key in ["cad_tipo", "cad_etapa", "cad_obs", "cad_desenho", "last_pdf"]:
+                    if key in st.session_state:
+                        del st.session_state[key]
+                st.rerun()
     
     # ==================== DOWNLOAD E BOTÃO CADASTRAR NOVA PEÇA ====================
     if st.session_state.get("last_pdf"):
