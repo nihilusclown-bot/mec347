@@ -360,7 +360,6 @@ if menu == "➕ Cadastrar Nova Peça":
     # ==================== DOWNLOAD DA ETIQUETA ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
-        
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
         if not df.empty:
             peca = df.iloc[0]
@@ -372,16 +371,15 @@ if menu == "➕ Cadastrar Nova Peça":
                 responsavel=responsavel_selecionado,
                 data_cadastro=peca["data_cadastro"],
                 etapa_atual=peca["etapa"],
-                data_atualizacao=peca["data_cadastro"],   
+                data_atualizacao=peca["data_cadastro"],
                 atualizado_por=f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
             )
             
             buf = io.BytesIO()
             img.save(buf, format="PDF", resolution=300)
             buf.seek(0)
-            
             st.download_button(
-                label="📄 **BAIXAR ETIQUETA**",
+                label="📄 **BAIXAR ETIQUETA EM PDF AGORA**",
                 data=buf.getvalue(),
                 file_name=f"etiqueta_{qr}.pdf",
                 mime="application/pdf",
