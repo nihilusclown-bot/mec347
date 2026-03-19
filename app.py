@@ -285,7 +285,6 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     img = Image.new("RGB", (2800, 1600), color=cor_hex)
     draw = ImageDraw.Draw(img)
     
-    # Usa apenas a fonte padrão do servidor (sempre disponível)
     font_titulo = ImageFont.load_default()
     font_normal = ImageFont.load_default()
     font_status = ImageFont.load_default()
@@ -294,11 +293,13 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1850, 380))
     
+    # Desenha o texto MÚLTIPLAS VEZES para simular fonte maior e mais grossa
     def texto(x, y, texto, font):
-        draw.text((x+8, y+8), texto, font=font, fill="#111111")   # sombra forte
+        for dx in range(-4, 5):
+            for dy in range(-4, 5):
+                draw.text((x + dx, y + dy), texto, font=font, fill="#111111")
         draw.text((x, y), texto, font=font, fill="black")
     
-    # Fontes gigantes (escaladas manualmente)
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
     texto(120, 320, f"Tipo: {tipo_peca}", font_normal)
     texto(120, 450, f"Cadastrado por: {cadastrado_por}", font_normal)
@@ -308,10 +309,6 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
     texto(120, 840, f"Status atual: {status_texto}", font_status)
     texto(120, 970, f"Atualizado por: {atualizado_por}", font_normal)
-    
-    # TEXTO DE TESTE GIGANTE VERMELHO (para confirmar que a nova versão carregou)
-    draw.text((120, 1150), "TESTE - FONTE GIGANTE CARREGADA!", 
-              font=font_titulo, fill="red")
     
     return img
 # ==================== CADASTRAR NOVA PEÇA ====================
