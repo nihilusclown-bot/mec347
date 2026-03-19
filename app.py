@@ -351,7 +351,7 @@ if menu == "➕ Cadastrar Nova Peça":
             st.session_state.last_pdf = qr_code
             st.rerun()
     
-    # ==================== DOWNLOAD E BOTÃO LIMPAR ====================
+    # ==================== DOWNLOAD E BOTÃO CADASTRAR NOVA PEÇA ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         # Recupera o tipo da peça para gerar a etiqueta
@@ -364,7 +364,7 @@ if menu == "➕ Cadastrar Nova Peça":
         buf.seek(0)
         
         st.download_button(
-            label="📄 **BAIXAR ETIQUETA EM PDF AGORA**",
+            label="📄 **BAIXAR ETIQUETA COM QR CODE**",
             data=buf.getvalue(),
             file_name=f"etiqueta_{qr}.pdf",
             mime="application/pdf",
@@ -372,7 +372,7 @@ if menu == "➕ Cadastrar Nova Peça":
             use_container_width=True
         )
         
-        if st.button("🧹 Limpar formulário e preparar nova peça", type="secondary", use_container_width=True):
+        if st.button("🧹 Cadastrar nova peça", type="secondary", use_container_width=True):
             # Limpa TODOS os campos do formulário
             for key in ["cad_tipo", "cad_etapa", "cad_obs", "cad_desenho", "last_pdf"]:
                 if key in st.session_state:
