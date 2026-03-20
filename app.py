@@ -146,7 +146,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
-    # ==================== LOGO NO TOPO DA TELA DE LOGIN ====================
+    # ==================== LOGO GRANDE NO TOPO DA TELA DE LOGIN ====================
     try:
         logo = Image.open("inspmax_logo.png")
         st.image(logo, use_column_width=True)
@@ -228,9 +228,9 @@ if not st.session_state.user:
             else:
                 st.error("E-mail ou nome não encontrado!")
 
-    st.stop()  # ← ESSA LINHA É CRUCIAL
+    st.stop()  # ← ESSA LINHA É O QUE FAZ A MÁGICA
 
-# ==================== MENU + SIDEBAR (só aparece após login) ====================
+# ==================== MENU + SIDEBAR (só após login) ====================
 try:
     logo_sidebar = Image.open("inspmax_logo.png")
     st.sidebar.image(logo_sidebar, use_column_width=True)
