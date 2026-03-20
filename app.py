@@ -476,6 +476,7 @@ elif menu == "🔄 Atualizar Status":
                                      VALUES (?,?,?,?,?,?,?,?)""",
                                   (qr_input, peca['tipo_peca'], nova_etapa, nova_etapa, "Atualizado", responsavel_full, agora, nova_obs))
                         conn.commit()
+                        st.session_state.last_pdf = qr_input   
                         st.toast("✅ Status atualizado!", icon="🎉")
                         st.rerun()
                 
@@ -498,11 +499,47 @@ elif menu == "🔄 Atualizar Status":
                                   (qr_input, peca['tipo_peca'], peca['etapa'], peca['cor_atual'],
                                    "Concluída", responsavel, agora, f"Resultado: {resultado_final} | {obs_conclusao}"))
                         conn.commit()
+                        st.session_state.last_pdf = qr_input   
                         st.success(f"Peça concluída como **{resultado_final}**!")
                         st.rerun()
         else:
             st.error("QR Code não encontrado!")
 
+    # ==================== BOTÃO DE DOWNLOAD DA ETIQUETA ====================
+    if st.session_state.get("last_pdf"):
+        qr = st.session_state.last_pdf
+        df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
+        if not df.empty:
+            peca = df.iloc[0]
+            
+            img = gerar_etiqueta(
+                qr_code=qr,
+                tipo_peca=peca["tipo_peca"],
+                cadastrado_por=peca.get("cadastrado_por", peca["responsavel"]),
+                responsavel=peca["responsavel"],
+                data_cadastro=peca["data_cadastro"],
+                etapa_atual=peca["etapa"],
+                data_atualizacao=peca.get("data_conclusao") or peca["data_cadastro"],
+                atualizado_por=peca["responsavel"]
+            )
+            
+            buf = io.BytesIO()
+            img.save(buf, format="PDF", resolution=300)
+            buf.seek(0)
+            st.download_button(
+                label="📄 **BAIXAR ETIQUETA ATUALIZADA**",
+                data=buf.getvalue(),
+                file_name=f"etiqueta_{qr}.pdf",
+                mime="application/pdf",
+                type="primary",
+                use_container_width=True
+            )
+            
+            if st.button("🧹 Limpar e preparar nova atualização", type="secondary", use_container_width=True):
+                if "last_pdf" in st.session_state:
+                    del st.session_state.last_pdf
+                st.rerun()
+              
 # ==================== GERENCIAR PEÇAS ====================
 elif menu == "🗑️ Gerenciar Peças":
     st.header("🗑️ Gerenciar Peças")
@@ -816,7 +853,7 @@ elif menu == "🖨️ Gerar Etiqueta":
                 img.save(buf, format="PDF", resolution=300)
                 buf.seek(0)
                 st.download_button(
-                    label="📄 Baixar Etiqueta em PDF",
+                    label="📄 Baixar Etiqueta",
                     data=buf.getvalue(),
                     file_name=f"etiqueta_{qr_input}.pdf",
                     mime="application/pdf"
