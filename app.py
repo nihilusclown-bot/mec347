@@ -272,7 +272,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
-    img = Image.new("RGB", (2900, 1750), color=cor_hex)
+    img = Image.new("RGB", (2900, 1800), color=cor_hex) 
     draw = ImageDraw.Draw(img)
     
     try:
@@ -285,19 +285,21 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
     img.paste(qr_img, (1950, 420))
-    
+        
     def texto(x, y, texto, font):
-        draw.text((x+3, y+3), texto, font=font, fill="#222222")
+        draw.text((x+2, y+2), texto, font=font, fill="#222222")
         draw.text((x, y), texto, font=font, fill="black")
         
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
-    texto(120, 290, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 390, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 490, f"Responsável: {responsavel}", font_normal)
-    texto(120, 590, f"Data de cadastro: {data_cadastro}", font_normal)
-    texto(120, 690, f"Status atual: {etapa_atual}", font_status)
-    texto(120, 770, f"Data de atualização: {data_atualizacao}", font_status)
-    texto(120, 850, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 300, f"Tipo: {tipo_peca}", font_normal)
+    texto(120, 410, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(120, 520, f"Responsável: {responsavel}", font_normal)
+    texto(120, 630, f"Data de cadastro: {data_cadastro}", font_normal)
+    
+    texto(120, 750, f"Status atual: {etapa_atual}", font_status)
+    texto(120, 830, f"Data de atualização: {data_atualizacao}", font_status)
+    
+    texto(120, 950, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
                      
