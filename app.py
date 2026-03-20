@@ -154,7 +154,7 @@ if not st.session_state.user:
     with col2:
         st.image(
             "inspmax_logo.png",
-            width=200,                   
+            width=80,                   
             use_column_width=False
         )
     
