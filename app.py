@@ -147,7 +147,7 @@ if not st.session_state.user:
     st.markdown("**Projeto Integrador MEC-3-47**")
     
     # ==================== LAYOUT COM VÍDEO À DIREITA ====================
-    col_form, col_video = st.columns([1.15, 1])   # ajuste os números se quiser mais espaço pro login
+    col_form, col_video = st.columns([2.8, 0.9])  
     
     with col_form:
         tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
@@ -231,7 +231,8 @@ if not st.session_state.user:
             format="video/mp4",
             loop=True,
             autoplay=True,
-            muted=True
+            muted=False,
+          height=320
         )
     
     st.stop()
