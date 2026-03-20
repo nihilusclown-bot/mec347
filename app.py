@@ -80,12 +80,7 @@ if "qr_code" in query_params:
             st.write(f"**Etapa atual:** {peca.get('etapa', '—')}")
             st.write(f"**Responsável:** {peca.get('responsavel', '—')}")
             st.write(f"**Data de cadastro:** {peca.get('data_cadastro', '—')}")
-        #with col2:
-            #try:
-                #st.image(criar_qr_pil(qr).resize((180, 180)), caption="QR Code da peça")
-            #except:
-                #st.info("QR Code temporariamente indisponível") 
-        
+                
         # ==================== HISTÓRICO E COMENTÁRIOS ====================
         st.divider()
         st.subheader("📜 Histórico e Comentários")
@@ -113,7 +108,7 @@ if "qr_code" in query_params:
             desenho_bytes = peca["desenho_tecnico"]
             try:
                 with st.expander("🔍 Visualizar desenho ampliado (zoom)", expanded=False):
-                    st.image(desenho_bytes, caption="Desenho Técnico Ampliado", use_container_width=True)
+                    st.image(desenho_bytes, caption="Desenho Técnico", use_container_width=True)
                 
                 st.download_button(
                     label="⬇️ Baixar Desenho Técnico",
