@@ -146,14 +146,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
-    # ==================== LOGO GRANDE NO TOPO DA TELA DE LOGIN ====================
-    try:
-        logo = Image.open("inspmax_logo.png")
-        st.image(logo, use_column_width=True)
-    except:
-        st.title("InspMax")
-    
-    st.subheader("Controle de Peças QR")
+    st.title("🛠️ InspMax - Login")
     st.markdown("**Projeto Integrador MEC-3-47**")
     
     tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
@@ -168,8 +161,8 @@ if not st.session_state.user:
             if submitted:
                 if nome_ou_email and senha:
                     df_user = pd.read_sql(f"""
-                        SELECT * FROM users 
-                        WHERE (nome = '{nome_ou_email}' OR email = '{nome_ou_email}') 
+                        SELECT * FROM users
+                        WHERE (nome = '{nome_ou_email}' OR email = '{nome_ou_email}')
                         AND senha = '{senha}'
                     """, conn)
                     if not df_user.empty:
@@ -194,13 +187,13 @@ if not st.session_state.user:
             if novo_nome and novo_email and nova_senha:
                 if "@" in novo_email and "." in novo_email and len(novo_email.split('@')) == 2:
                     try:
-                        c.execute("""INSERT INTO users 
-                                     (nome, email, senha, funcao, funcao_custom) 
+                        c.execute("""INSERT INTO users
+                                     (nome, email, senha, funcao, funcao_custom)
                                      VALUES (?,?,?,?,?)""",
                                   (novo_nome, novo_email, nova_senha, funcao, None))
                         conn.commit()
                         st.session_state.cadastro_sucesso = True
-                        st.rerun()   
+                        st.rerun()
                     except sqlite3.IntegrityError:
                         st.error("Esse nome ou e-mail já está cadastrado!")
                 else:
@@ -214,7 +207,7 @@ if not st.session_state.user:
         recover_input = st.text_input("E-mail ou Nome")
         if st.button("Recuperar senha"):
             df = pd.read_sql(f"""
-                SELECT nome, email FROM users 
+                SELECT nome, email FROM users
                 WHERE nome = '{recover_input}' OR email = '{recover_input}'
             """, conn)
             if not df.empty:
@@ -228,7 +221,7 @@ if not st.session_state.user:
             else:
                 st.error("E-mail ou nome não encontrado!")
 
-    st.stop()  # ← ESSA LINHA É FUNDAMENTAL
+    st.stop()
 
 # ==================== MENU + SIDEBAR (só após login) ====================
 try:
