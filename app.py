@@ -146,11 +146,11 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
-    st.title("🛠️ Controle de Peças QR - Login")
+    st.title("🛠️ InspMax - Login")
     st.markdown("**Projeto Integrador MEC-3-47**")
     
     # ==================== LAYOUT COM VÍDEO PEQUENO ====================
-    col_form, col_video = st.columns([3.3, 0.65])   
+    col_form, col_video = st.columns([3.3, 1])   
     
     with col_form:
         tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
@@ -225,13 +225,12 @@ if not st.session_state.user:
 
     # ==================== VÍDEO PEQUENO ====================
     with col_video:
-        #st.markdown("### 🎥 InspMax")
-        st.video(
+             st.video(
             "video_login.mp4",
             format="video/mp4",
             loop=True,
             autoplay=True,
-            muted=True
+            muted=False
         )
     
     st.stop()
