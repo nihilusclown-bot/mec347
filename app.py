@@ -226,6 +226,12 @@ if not st.session_state.user:
     st.stop()
 
 # ==================== MENU + ADMINISTRAÇÃO ====================
+try:
+    logo = Image.open("inspmax_logo.png")
+    st.sidebar.image(logo, use_column_width=True)  
+except:
+    st.sidebar.title("🛠️ InspMax")
+
 st.sidebar.success(f"👤 {st.session_state.user['nome']} ({st.session_state.user.get('funcao', '—')})")
 if st.sidebar.button("🚪 Sair"):
     st.session_state.user = None
