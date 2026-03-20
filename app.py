@@ -277,9 +277,8 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     img = Image.new("RGB", (largura, altura), color="white")
     draw = ImageDraw.Draw(img)
         
-    # Barra lateral colorida (azul ou cor da etapa)
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
-        
+      
     try:
         logo_original = Image.open("inspmax_logo.png").convert("RGBA")
         logo = logo_original.resize((380, 155), Image.Resampling.LANCZOS)
@@ -288,10 +287,10 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         img.paste(logo_com_fundo_branco, (95, 35))
     except:
         draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
-   
+    
     qr_pil = criar_qr_pil(qr_code)
     qr_img = qr_pil.resize((265, 265))
-    img.paste(qr_img, (830, 200))   
+    img.paste(qr_img, (830, 200))   # sem moldura cinza
     
     try:
         font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 42)
@@ -299,26 +298,31 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     except:
         font_titulo = font_normal = ImageFont.load_default()
     
-    def desenhar_texto(x, y_inicial, texto, font, cor="black", max_largura_pixels=680):
+    def desenhar_texto(x, y_inicial, texto, font, cor="black", max_largura=720):
+        if not texto.strip():
+            return y_inicial + 10
         palavras = texto.split()
         linhas = []
         linha_atual = []
+        
         for palavra in palavras:
             linha_teste = ' '.join(linha_atual + [palavra])
             largura_teste = draw.textlength(linha_teste, font=font)
-            if largura_teste > max_largura_pixels:
+            
+            if largura_teste > max_largura and linha_atual:
                 linhas.append(' '.join(linha_atual))
                 linha_atual = [palavra]
             else:
-                linha_atual = [palavra]
+                linha_atual.append(palavra)  
+        
         if linha_atual:
             linhas.append(' '.join(linha_atual))
-
+        
         y = y_inicial
         for linha in linhas:
             draw.text((x, y), linha, fill=cor, font=font)
-            y += font.size + 8   
-        return y + 10   
+            y += font.size + 12   
+        return y + 8
     
     y = 215
     y = desenhar_texto(95, y, f"Nº: {qr_code}", font_titulo)
