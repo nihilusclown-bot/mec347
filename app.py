@@ -277,9 +277,9 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     
     try:
         font_path = "DejaVuSans-Bold.ttf"
-        font_titulo = ImageFont.truetype(font_path, 135)
-        font_normal = ImageFont.truetype(font_path, 88)
-        font_status = ImageFont.truetype(font_path, 72)
+        font_titulo = ImageFont.truetype(font_path, 120)
+        font_normal = ImageFont.truetype(font_path, 80)
+        font_status = ImageFont.truetype(font_path, 65)
     except:
         font_titulo = font_normal = font_status = ImageFont.load_default()
     
