@@ -230,7 +230,7 @@ if not st.session_state.user:
             format="video/mp4",
             loop=True,
             autoplay=True,
-            muted=False
+            muted=True
         )
     
     st.stop()
