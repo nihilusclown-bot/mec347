@@ -226,7 +226,7 @@ if not st.session_state.user:
 # ==================== MENU + SIDEBAR  ====================
 try:
     logo_sidebar = Image.open("inspmax_logo.png")
-    st.sidebar.image(logo_sidebar, width=200)  
+    st.sidebar.image(logo_sidebar, width=100)  
 except:
     st.sidebar.title("InspMax")
 
