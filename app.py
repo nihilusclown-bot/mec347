@@ -786,7 +786,7 @@ elif menu == "🖨️ Gerar Etiqueta":
     else:
         qr_input = escolha.split(" - ")[0]
     
-        if qr_input:
+    if qr_input:
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr_input}'", conn)
         if not df.empty:
             peca = df.iloc[0]
@@ -800,7 +800,7 @@ elif menu == "🖨️ Gerar Etiqueta":
                     data_cadastro=peca["data_cadastro"],
                     etapa_atual=peca["etapa"],
                     data_atualizacao=peca.get("data_conclusao") or peca["data_cadastro"],
-                    atualizado_por=peca["responsavel"]   # último responsável (com cargo)
+                    atualizado_por=peca["responsavel"]
                 )
                 st.image(img, caption="Pré-visualização da Etiqueta", use_container_width=True)
                 
