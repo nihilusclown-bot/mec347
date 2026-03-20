@@ -272,28 +272,31 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
                    data_cadastro, etapa_atual, data_atualizacao, atualizado_por):
     
     cor_etapa = CORES.get(etapa_atual, "#1E90FF")
-        
+    
     largura, altura = 1150, 720
     img = Image.new("RGB", (largura, altura), color="white")
     draw = ImageDraw.Draw(img)
-      
+        
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
         
     try:
         logo = Image.open("inspmax_logo.png").convert("RGBA")
-        logo = logo.resize((260, 95), Image.Resampling.LANCZOS)
-        draw.rectangle([90, 35, 90+270, 35+105], fill="white", outline=None)
-        img.paste(logo, (95, 40), logo)
+        # Logo maior e preenchendo toda a área marcada
+        logo = logo.resize((380, 155), Image.Resampling.LANCZOS)
+              
+        draw.rectangle([85, 25, 85+390, 25+170], fill="white", outline="#e0e0e0", width=4)
+              
+        img.paste(logo, (95, 35), logo)
     except:
-        pass
+        draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
       
     qr_pil = criar_qr_pil(qr_code)
     qr_img = qr_pil.resize((265, 265))
     draw.rectangle([820, 190, 820+285, 190+285], fill="white", outline="#eeeeee", width=4)
     img.paste(qr_img, (830, 200))
-
+      
     try:
-        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 62)
+        font_titulo = ImageFont.truetype("DejaVuSans-Bold.ttf", 52)
         font_normal = ImageFont.truetype("DejaVuSans-Bold.ttf", 38)
     except:
         font_titulo = font_normal = ImageFont.load_default()
@@ -301,14 +304,14 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     def texto(x, y, txt, font, cor="black"):
         draw.text((x, y), txt, fill=cor, font=font)
         
-    texto(95, 170, f"Nº: {qr_code}", font_titulo)
-    texto(95, 235, f"Tipo: {tipo_peca}", font_normal)
-    texto(95, 285, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(95, 335, f"Responsável: {responsavel}", font_normal)
-    texto(95, 385, f"Data cadastro: {data_cadastro}", font_normal)
-    texto(95, 435, f"Status: {etapa_atual}", font_normal, cor=cor_etapa)
-    texto(95, 485, f"Data atualização: {data_atualizacao}", font_normal)
-    texto(95, 535, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(95, 215, f"Nº: {qr_code}", font_titulo)
+    texto(95, 275, f"Tipo: {tipo_peca}", font_normal)
+    texto(95, 320, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(95, 365, f"Responsável: {responsavel}", font_normal)
+    texto(95, 410, f"Data cadastro: {data_cadastro}", font_normal)
+    texto(95, 455, f"Status: {etapa_atual}", font_normal, cor=cor_etapa)
+    texto(95, 500, f"Data atualização: {data_atualizacao}", font_normal)
+    texto(95, 545, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
                      
