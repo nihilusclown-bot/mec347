@@ -227,7 +227,7 @@ if not st.session_state.user:
 try:
     logo_original = Image.open("inspmax_logo.png").convert("RGB")
   
-    logo_resized = logo_original.resize((255, 92), Image.Resampling.LANCZOS)
+    logo_resized = logo_original.resize((255, 100), Image.Resampling.LANCZOS)
     st.sidebar.image(logo_resized)
 except:
     st.sidebar.title("InspMax")
