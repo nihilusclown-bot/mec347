@@ -292,7 +292,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         logo = logo_original.resize((380, 200), Image.Resampling.LANCZOS)
         logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
         logo_com_fundo_branco.paste(logo, (0, 0), logo)
-        img.paste(logo_com_fundo_branco, (95, 35))
+        img.paste(logo_com_fundo_branco, (95, 8))
     except:
         draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
 
