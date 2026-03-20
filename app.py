@@ -150,7 +150,7 @@ if not st.session_state.user:
     st.markdown("**Projeto Integrador MEC-3-47**")
     
     # ==================== LAYOUT COM VÍDEO PEQUENO ====================
-    col_form, col_video = st.columns([2.8, 0.9])   # formulário grande + vídeo pequeno
+    col_form, col_video = st.columns([3.3, 0.65])   # ← vídeo bem estreito agora
     
     with col_form:
         tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
@@ -189,20 +189,17 @@ if not st.session_state.user:
             funcao = st.selectbox("Função", ["Operador", "Inspetor de Qualidade", "Supervisor", "Gestor"])
             
             if st.button("Cadastrar Usuário", use_container_width=True):
-                if novo_nome and novo_email and nova_senha:
-                    if "@" in novo_email and "." in novo_email and len(novo_email.split('@')) == 2:
-                        try:
-                            c.execute("""INSERT INTO users 
-                                         (nome, email, senha, funcao, funcao_custom) 
-                                         VALUES (?,?,?,?,?)""",
-                                      (novo_nome, novo_email, nova_senha, funcao, None))
-                            conn.commit()
-                            st.session_state.cadastro_sucesso = True
-                            st.rerun()   
-                        except sqlite3.IntegrityError:
-                            st.error("Esse nome ou e-mail já está cadastrado!")
-                    else:
-                        st.error("Por favor, use um e-mail válido!")
+                if novo_nome and novo_email and nova_senha and "@" in novo_email:
+                    try:
+                        c.execute("""INSERT INTO users 
+                                     (nome, email, senha, funcao, funcao_custom) 
+                                     VALUES (?,?,?,?,?)""",
+                                  (novo_nome, novo_email, nova_senha, funcao, None))
+                        conn.commit()
+                        st.session_state.cadastro_sucesso = True
+                        st.rerun()   
+                    except sqlite3.IntegrityError:
+                        st.error("Esse nome ou e-mail já está cadastrado!")
                 else:
                     st.error("Preencha todos os campos!")
 
@@ -222,11 +219,11 @@ if not st.session_state.user:
                         c.execute("UPDATE users SET senha = ? WHERE nome = ? OR email = ?",
                                   (nova_senha_recover, recover_input, recover_input))
                         conn.commit()
-                        st.success("Senha alterada com sucesso! Agora faça login.")
+                        st.success("Senha alterada com sucesso!")
                 else:
                     st.error("E-mail ou nome não encontrado!")
 
-    # ==================== VÍDEO PEQUENO E BONITO ====================
+    # ==================== VÍDEO PEQUENO ====================
     with col_video:
         st.markdown("### 🎥 InspMax")
         st.video(
@@ -234,8 +231,7 @@ if not st.session_state.user:
             format="video/mp4",
             loop=True,
             autoplay=True,
-            muted=True,
-            height=280          # ← altura ideal (pode mudar para 250 ou 300)
+            muted=True
         )
     
     st.stop()
