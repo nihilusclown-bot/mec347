@@ -272,17 +272,26 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
-    img = Image.new("RGB", (2900, 1850), color=cor_hex)
+    img = Image.new("RGB", (3100, 1900), color=cor_hex)
     draw = ImageDraw.Draw(img)
         
     try:
-        logo = Image.open("inspmax_logo.png").resize((650, 260), Image.Resampling.LANCZOS)
-        img.paste(logo, (1950, 60))   # acima do QR Code
+        logo = Image.open("inspmax_logo.png").convert("RGBA")
+        datas = logo.getdata()
+        newData = []
+        for item in datas:
+            if item[0] == 255 and item[1] == 255 and item[2] == 255:
+                newData.append((255, 255, 255, 0))  
+            else:
+                newData.append(item)
+        logo.putdata(newData)
+        logo = logo.resize((850, 330), Image.Resampling.LANCZOS)
+        img.paste(logo, (1950, 80), logo)  
     except:
         pass
         
     qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.Resampling.LANCZOS)
-    img.paste(qr_img, (1950, 420))
+    img.paste(qr_img, (1950, 460))
         
     try:
         font_path = "DejaVuSans-Bold.ttf"
@@ -295,7 +304,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     def texto(x, y, texto, font):
         draw.text((x+3, y+3), texto, font=font, fill="#222222")
         draw.text((x, y), texto, font=font, fill="black")
-      
+        
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
     texto(120, 290, f"Tipo: {tipo_peca}", font_normal)
     texto(120, 390, f"Cadastrado por: {cadastrado_por}", font_normal)
