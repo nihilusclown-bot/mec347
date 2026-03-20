@@ -150,7 +150,7 @@ if not st.session_state.user:
     st.markdown("**Projeto Integrador MEC-3-47**")
     
     # ==================== LAYOUT COM VÍDEO PEQUENO ====================
-    col_form, col_video = st.columns([3.3, 0.65])   # ← vídeo bem estreito agora
+    col_form, col_video = st.columns([3.3, 0.65])   
     
     with col_form:
         tab_login, tab_register, tab_recover = st.tabs(["🔑 Fazer Login", "📝 Cadastrar Novo Usuário", "🔓 Esqueci minha senha"])
@@ -225,7 +225,7 @@ if not st.session_state.user:
 
     # ==================== VÍDEO PEQUENO ====================
     with col_video:
-        st.markdown("### 🎥 InspMax")
+        #st.markdown("### 🎥 InspMax")
         st.video(
             "video_login.mp4",
             format="video/mp4",
