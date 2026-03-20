@@ -272,15 +272,18 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
                    etapa_atual, data_atualizacao, atualizado_por):
     cor_hex = CORES.get(etapa_atual, "#1E90FF")
     
-    img = Image.new("RGB", (2900, 1800), color=cor_hex)
+    img = Image.new("RGB", (2900, 1850), color=cor_hex)
     draw = ImageDraw.Draw(img)
-      
+        
     try:
-        logo = Image.open("inspmax_logo.png").resize((520, 220))
-        img.paste(logo, (120, 40))
+        logo = Image.open("inspmax_logo.png").resize((650, 260), Image.Resampling.LANCZOS)
+        img.paste(logo, (1950, 60))   # acima do QR Code
     except:
-        pass  
-    
+        pass
+        
+    qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.Resampling.LANCZOS)
+    img.paste(qr_img, (1950, 420))
+        
     try:
         font_path = "DejaVuSans-Bold.ttf"
         font_titulo = ImageFont.truetype(font_path, 120)
@@ -289,22 +292,19 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     except:
         font_titulo = font_normal = font_status = ImageFont.load_default()
     
-    qr_img = criar_qr_pil(qr_code).resize((780, 780), Image.LANCZOS)
-    img.paste(qr_img, (1950, 420))
-    
     def texto(x, y, texto, font):
         draw.text((x+3, y+3), texto, font=font, fill="#222222")
         draw.text((x, y), texto, font=font, fill="black")
-        
-    texto(120, 320, f"Nº: {qr_code}", font_titulo)
-    texto(120, 410, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 490, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 570, f"Responsável: {responsavel}", font_normal)
-    texto(120, 650, f"Data de cadastro: {data_cadastro}", font_normal)
+      
+    texto(120, 140, f"Nº: {qr_code}", font_titulo)
+    texto(120, 290, f"Tipo: {tipo_peca}", font_normal)
+    texto(120, 390, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(120, 490, f"Responsável: {responsavel}", font_normal)
+    texto(120, 590, f"Data de cadastro: {data_cadastro}", font_normal)
     
-    texto(120, 740, f"Status atual: {etapa_atual}", font_status)
-    texto(120, 810, f"Data de atualização: {data_atualizacao}", font_status)
-    texto(120, 890, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 700, f"Status atual: {etapa_atual}", font_status)
+    texto(120, 780, f"Data de atualização: {data_atualizacao}", font_status)
+    texto(120, 860, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
                      
