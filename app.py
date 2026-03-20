@@ -280,72 +280,30 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel, data_cadastr
     
     try:
         font_path = "DejaVuSans-Bold.ttf"
-        font_titulo = ImageFont.truetype(font_path, 180)   # reduzido
-        font_normal = ImageFont.truetype(font_path, 105)   # reduzido
-        font_status = ImageFont.truetype(font_path, 80)    # reduzido
+        font_titulo = ImageFont.truetype(font_path, 145)   # reduzido
+        font_normal = ImageFont.truetype(font_path, 88)    # reduzido
+        font_status = ImageFont.truetype(font_path, 72)    # reduzido
     except:
         font_titulo = font_normal = font_status = ImageFont.load_default()
-    
+        
     qr_img = criar_qr_pil(qr_code).resize((800, 800), Image.LANCZOS)
     img.paste(qr_img, (1950, 420))
-        
+    
     def texto(x, y, texto, font):
-        draw.text((x+4, y+4), texto, font=font, fill="#222222")   # sombra leve
+        draw.text((x+3, y+3), texto, font=font, fill="#222222")
         draw.text((x, y), texto, font=font, fill="black")
-        
+    
     texto(120, 140, f"Nº: {qr_code}", font_titulo)
-    texto(120, 320, f"Tipo: {tipo_peca}", font_normal)
-    texto(120, 450, f"Cadastrado por: {cadastrado_por}", font_normal)
-    texto(120, 580, f"Responsável: {responsavel}", font_normal)
-    texto(120, 710, f"Data de cadastro: {data_cadastro}", font_normal)
+    texto(120, 300, f"Tipo: {tipo_peca}", font_normal)
+    texto(120, 410, f"Cadastrado por: {cadastrado_por}", font_normal)
+    texto(120, 520, f"Responsável: {responsavel}", font_normal)
+    texto(120, 630, f"Data de cadastro: {data_cadastro}", font_normal)
     
     status_texto = f"{etapa_atual} - Data de atualização: {data_atualizacao}"
-    texto(120, 840, f"Status atual: {status_texto}", font_status)
-    texto(120, 970, f"Atualizado por: {atualizado_por}", font_normal)
+    texto(120, 740, f"Status atual: {status_texto}", font_status)
+    texto(120, 850, f"Atualizado por: {atualizado_por}", font_normal)
     
     return img
-# ==================== CADASTRAR NOVA PEÇA ====================
-if menu == "➕ Cadastrar Nova Peça":
-    if st.session_state.user['funcao'] not in ["Operador", "Gestor", "Supervisor", "Administrador"]:
-        st.error("❌ Você não tem permissão para cadastrar peças.")
-        st.stop()
-    
-    st.header("Cadastrar Nova Peça")
-    
-    if st.session_state.user['funcao'] in ["Gestor", "Supervisor", "Administrador"]:
-        operadores = pd.read_sql("SELECT nome FROM users WHERE funcao = 'Operador'", conn)["nome"].tolist()
-        responsavel_selecionado = st.selectbox("Operador responsável pela peça", operadores, key="resp_cadastro")
-    else:
-        responsavel_selecionado = st.session_state.user['nome']
-    
-    with st.form("cadastro_nova_peca", clear_on_submit=True):
-        tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)", key="cad_tipo")
-        etapa_inicial = st.selectbox("Etapa Inicial", ["Usinagem"], key="cad_etapa")
-        obs = st.text_area("Observações iniciais", key="cad_obs")
-        desenho = st.file_uploader("Desenho Técnico (PDF ou Imagem)", type=["pdf", "png", "jpg", "jpeg"], key="cad_desenho")
-        submitted = st.form_submit_button("Cadastrar Peça")
-        
-        if submitted:
-            qr_code = f"PECA-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-            agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-            desenho_bytes = desenho.read() if desenho else None
-            
-            c.execute("""INSERT INTO pecas 
-                         (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, 
-                          data_cadastro, resultado, data_conclusao, responsavel_conclusao, desenho_tecnico)
-                         VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
-                      (qr_code, tipo, etapa_inicial, "Em andamento", etapa_inicial, 
-                       responsavel_selecionado, agora, None, None, None, desenho_bytes))
-            
-            c.execute("""INSERT INTO historico 
-                         (qr_code, tipo_peca, etapa, cor, status, responsavel, data, observacao) 
-                         VALUES (?,?,?,?,?,?,?,?)""",
-                      (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", responsavel_selecionado, agora, obs))
-            conn.commit()
-            
-            st.success(f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**")
-            st.session_state.last_pdf = qr_code
-            st.rerun()
     
     # ==================== DOWNLOAD DA ETIQUETA ====================
     if st.session_state.get("last_pdf"):
