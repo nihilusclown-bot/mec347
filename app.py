@@ -80,11 +80,11 @@ if "qr_code" in query_params:
             st.write(f"**Etapa atual:** {peca.get('etapa', '—')}")
             st.write(f"**Responsável:** {peca.get('responsavel', '—')}")
             st.write(f"**Data de cadastro:** {peca.get('data_cadastro', '—')}")
-        with col2:
-            try:
-                st.image(criar_qr_pil(qr).resize((180, 180)), caption="QR Code da peça")
-            except:
-                st.info("QR Code temporariamente indisponível") 
+        #with col2:
+            #try:
+                #st.image(criar_qr_pil(qr).resize((180, 180)), caption="QR Code da peça")
+            #except:
+                #st.info("QR Code temporariamente indisponível") 
         
         # ==================== HISTÓRICO E COMENTÁRIOS ====================
         st.divider()
