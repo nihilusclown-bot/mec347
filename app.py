@@ -146,7 +146,7 @@ if "user" not in st.session_state:
     st.session_state.user = None
 
 if not st.session_state.user:
-    # ==================== LOGO DA EMPRESA (no topo da tela de login) ====================
+    # ==================== LOGO NO TOPO DA TELA DE LOGIN ====================
     try:
         logo = Image.open("inspmax_logo.png")
         st.image(logo, use_column_width=True)
@@ -185,7 +185,6 @@ if not st.session_state.user:
         if st.session_state.get("cadastro_sucesso", False):
             st.success("✅ Usuário cadastrado com sucesso!", icon="🎉")
             st.session_state.cadastro_sucesso = False
-
         novo_nome = st.text_input("Nome completo (será seu login)")
         novo_email = st.text_input("E-mail válido")
         nova_senha = st.text_input("Escolha uma senha", type="password")
@@ -229,10 +228,9 @@ if not st.session_state.user:
             else:
                 st.error("E-mail ou nome não encontrado!")
 
-    st.stop()   # ← Para aqui e não executa o menu
+    st.stop()  # ← ESSA LINHA É CRUCIAL
 
-# ==================== MENU + ADMINISTRAÇÃO (só aparece após login) ====================
-# ==================== LOGO NO SIDEBAR (em todas as páginas internas) ====================
+# ==================== MENU + SIDEBAR (só aparece após login) ====================
 try:
     logo_sidebar = Image.open("inspmax_logo.png")
     st.sidebar.image(logo_sidebar, use_column_width=True)
