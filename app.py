@@ -24,7 +24,7 @@ c.execute('''CREATE TABLE IF NOT EXISTS pecas (
              status TEXT,
              etapa TEXT,
              responsavel TEXT,
-             cadastrado_por TEXT,          -- NOVO: quem cadastrou (com cargo)
+             cadastrado_por TEXT,          
              data_cadastro TEXT,
              resultado TEXT,
              data_conclusao TEXT,
@@ -130,8 +130,7 @@ if not st.session_state.user:
                     st.error("Preencha todos os campos!")
 
               # ====================== CADASTRO ======================
-    with tab_register:
-        # Mensagem de sucesso no topo da aba
+    with tab_register:        
         if st.session_state.get("cadastro_sucesso", False):
             st.success("✅ Usuário cadastrado com sucesso!", icon="🎉")
             st.session_state.cadastro_sucesso = False
@@ -234,7 +233,7 @@ if st.session_state.user.get('nome') == 'admin':
                 del st.session_state.confirm_delete_all
                 st.rerun()
 
-    # 2) Gerenciar Usuários (mantido igual)
+    # 2) Gerenciar Usuários
     with st.sidebar.expander("👥 Gerenciar Usuários"):
         df_users = pd.read_sql("SELECT id, nome, funcao, funcao_custom FROM users", conn)
         st.dataframe(df_users, use_container_width=True, hide_index=True)
@@ -281,23 +280,31 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
     
     cor_etapa = CORES.get(etapa_atual, "#1E90FF")
     
-    largura, altura = 1150, 720
+    largura, altura = 1150, 800
     img = Image.new("RGB", (largura, altura), color="white")
     draw = ImageDraw.Draw(img)
         
     draw.rectangle([0, 0, 65, altura], fill=cor_etapa)
         
-    # LOGO
-    try:
-        logo_original = Image.open("inspmax_logo.png").convert("RGBA")
-        logo = logo_original.resize((380, 155), Image.Resampling.LANCZOS)
-        logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
-        logo_com_fundo_branco.paste(logo, (0, 0), logo)
-        img.paste(logo_com_fundo_branco, (95, 35))
-    except:
-        draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
+   # ==================== LOGO ====================
+try:
+    logo_original = Image.open("inspmax_logo.png").convert("RGBA")
+    
+    # Aumentando a altura para deixar mais "cumprido" (teste 200, 220 ou 250)
+    nova_largura = 380
+    nova_altura = 220  # ← AQUI: aumente para mais alto (ex: 240 ou 260)
+        
+    logo = logo_original.resize((nova_largura, nova_altura), Image.Resampling.LANCZOS)
+      
+    logo_com_fundo_branco = Image.new("RGBA", logo.size, (255, 255, 255, 255))
+    logo_com_fundo_branco.paste(logo, (0, 0), logo)
+        
+    img.paste(logo_com_fundo_branco, (95, 20))  # ← Ajuste o 20 se quiser mover para cima/baixo
+except Exception as e:
+    # Fallback simples
+    draw.text((100, 60), "InspMax", fill="black", font=ImageFont.load_default())
 
-    # QR CODE (sem moldura)
+    # QR CODE
     qr_pil = criar_qr_pil(qr_code)
     qr_img = qr_pil.resize((265, 265))
     img.paste(qr_img, (830, 200))
@@ -334,7 +341,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
         return y + 8
 
     # TEXTOS
-    y = 215
+    y = 260
     y = desenhar_texto(95, y, f"Nº: {qr_code}", font_titulo)
     y = desenhar_texto(95, y, f"Tipo: {tipo_peca}", font_normal)
     y = desenhar_texto(95, y, f"Cadastrado por: {cadastrado_por}", font_normal)
