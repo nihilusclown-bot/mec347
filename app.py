@@ -619,16 +619,24 @@ elif menu == "🔄 Atualizar Status":
 # ==================== GERENCIAR PEÇAS ====================
 elif menu == "🗑️ Gerenciar Peças":
     st.header("🗑️ Gerenciar Peças")
-        
+    
     df = pd.read_sql("""
-        SELECT * FROM pecas 
+        SELECT 
+            qr_code AS "QR Code",
+            tipo_peca AS "Tipo da Peça",
+            etapa AS "Etapa",                    
+            status AS "Status",
+            responsavel AS "Responsável",
+            data_cadastro AS "Data Cadastro"
+        FROM pecas 
         WHERE resultado IS NULL OR resultado = ''
+        ORDER BY data_cadastro DESC
     """, conn)
     
     if not df.empty:
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(df, use_container_width=True, hide_index=True)
         
-        qr_para_acao = st.selectbox("Selecione o QR Code para excluir", df["qr_code"].tolist())
+        qr_para_acao = st.selectbox("Selecione o QR Code para excluir", df["QR Code"].tolist())
         
         if st.button("🗑️ EXCLUIR esta peça", type="primary"):
             st.session_state.to_delete = qr_para_acao
@@ -651,7 +659,7 @@ elif menu == "🗑️ Gerenciar Peças":
         with col_nao:
             if st.button("❌ Cancelar"):
                 del st.session_state.to_delete
-                st.rerun()    
+                st.rerun()
     
 # ==================== DASHBOARD GERAL ====================
 elif menu == "📊 Dashboard Geral":
@@ -677,22 +685,29 @@ elif menu == "📊 Dashboard Geral":
 # ==================== LISTA DE PEÇAS ====================
 elif menu == "📋 Lista de Peças":
     st.header("Lista Completa de Peças")
+        
     df_andamento = pd.read_sql("""
-        SELECT qr_code, tipo_peca, etapa, cor_atual, status, responsavel, data_cadastro 
-        FROM pecas WHERE resultado IS NULL OR resultado = ''
+        SELECT 
+            qr_code,
+            tipo_peca,
+            etapa,
+            status,
+            responsavel,
+            data_cadastro
+        FROM pecas 
+        WHERE resultado IS NULL OR resultado = ''
     """, conn)
     
     if not df_andamento.empty:
         df_andamento = df_andamento.rename(columns={
             "tipo_peca": "Tipo da Peça",
             "etapa": "Etapa",
-            "cor_atual": "Cor",
             "status": "Status",
             "responsavel": "Responsável",
             "data_cadastro": "Data Atualização"
         })
-        df_andamento = df_andamento[["qr_code", "Tipo da Peça", "Etapa", "Cor", "Status", "Responsável", "Data Atualização"]]
-    
+        df_andamento = df_andamento[["qr_code", "Tipo da Peça", "Etapa", "Status", "Responsável", "Data Atualização"]]
+      
     df_concluidas = pd.read_sql("SELECT * FROM pecas WHERE resultado IS NOT NULL", conn)
     
     tab_and, tab_conc = st.tabs(["Peças em Andamento", "Peças Concluídas"])
@@ -707,7 +722,8 @@ elif menu == "📋 Lista de Peças":
         if not df_concluidas.empty:
             df_display = df_concluidas[['qr_code', 'tipo_peca', 'resultado', 'responsavel', 
                                        'responsavel_conclusao', 'data_cadastro', 'data_conclusao']].rename(columns={
-                'tipo_peca': 'Nome da Peça', 'resultado': 'Status',
+                'tipo_peca': 'Nome da Peça',
+                'resultado': 'Status',
                 'responsavel': 'Responsável Cadastro',
                 'responsavel_conclusao': 'Quem Concluiu'
             })
@@ -750,18 +766,19 @@ elif menu == "📖 Histórico por Peça":
             lista_and = df_andamento["qr_code"].tolist()
             qr_sel_and = st.selectbox("Selecione o QR Code (Em Andamento)", lista_and, key="hist_and")
             if qr_sel_and:
-                hist = pd.read_sql(f"""SELECT 
-                                       tipo_peca AS "Tipo_Peca",
-                                       etapa AS "Etapa",
-                                       cor AS "Cor",
-                                       status,
-                                       responsavel,
-                                       data,
-                                       observacao 
-                                       FROM historico 
-                                       WHERE qr_code='{qr_sel_and}' 
-                                       ORDER BY data""", conn)
-                st.dataframe(hist, use_container_width=True)
+                hist = pd.read_sql(f"""
+                    SELECT 
+                        tipo_peca AS "Tipo da Peça",
+                        etapa     AS "Etapa",
+                        status    AS "Status",
+                        responsavel AS "Responsável",
+                        data      AS "Data/Hora",
+                        observacao AS "Observação"
+                    FROM historico 
+                    WHERE qr_code='{qr_sel_and}' 
+                    ORDER BY data ASC
+                """, conn)
+                st.dataframe(hist, use_container_width=True, hide_index=True)
         else:
             st.info("Nenhuma peça em andamento.")
     
@@ -770,21 +787,22 @@ elif menu == "📖 Histórico por Peça":
             lista_conc = df_concluidas["qr_code"].tolist()
             qr_sel_conc = st.selectbox("Selecione o QR Code (Concluídas)", lista_conc, key="hist_conc")
             if qr_sel_conc:
-                hist = pd.read_sql(f"""SELECT 
-                                       tipo_peca AS "Tipo_Peca",
-                                       etapa AS "Etapa",
-                                       cor AS "Cor",
-                                       status,
-                                       responsavel,
-                                       data,
-                                       observacao 
-                                       FROM historico 
-                                       WHERE qr_code='{qr_sel_conc}' 
-                                       ORDER BY data""", conn)
-                st.dataframe(hist, use_container_width=True)
+                hist = pd.read_sql(f"""
+                    SELECT 
+                        tipo_peca AS "Tipo da Peça",
+                        etapa     AS "Etapa",
+                        status    AS "Status",
+                        responsavel AS "Responsável",
+                        data      AS "Data/Hora",
+                        observacao AS "Observação"
+                    FROM historico 
+                    WHERE qr_code='{qr_sel_conc}' 
+                    ORDER BY data ASC
+                """, conn)
+                st.dataframe(hist, use_container_width=True, hide_index=True)
         else:
             st.info("Nenhuma peça concluída ainda.")
-
+          
 # ==================== PRODUTIVIDADE ====================
 elif menu == "📈 Produtividade":
     st.header("📈 Produtividade da Equipe")
@@ -842,20 +860,36 @@ elif menu == "📈 Produtividade":
             
             st.dataframe(op, use_container_width=True)
 
-        # ====================== INSPETORES ======================
-        with tab_insp:
-            st.subheader("Desempenho dos Inspetores")
-            insp = df_filtrado[df_filtrado['status'].isin(['Atualizado', 'Concluída'])].groupby('responsavel').agg(
-                Total_Inspecionadas=('id', 'count'),
-                Aprovadas=('status', lambda x: (x == 'Concluída').sum()),
-                Reprovadas=('status', lambda x: (x == 'Concluída').sum())
-            ).reset_index()
-            
-            insp = insp.astype({'Total_Inspecionadas': 'int', 'Aprovadas': 'int', 'Reprovadas': 'int'})
-            insp['Taxa_Aprovacao_%'] = (insp['Aprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
-            insp['Taxa_Reprovacao_%'] = (insp['Reprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
-            
-            st.dataframe(insp, use_container_width=True)
+       # ====================== INSPETORES ======================
+with tab_insp:
+    st.subheader("Desempenho dos Inspetores")
+        
+    df_insp = pd.read_sql("""
+        SELECT h.responsavel, h.status, h.id
+        FROM historico h
+        WHERE h.status IN ('Atualizado', 'Concluída')
+          AND h.responsavel LIKE 'Inspetor de Qualidade%'
+    """, conn)
+    
+    if df_insp.empty:
+        st.info("Ainda não há atualizações de Inspetores.")
+    else:
+        insp = df_insp.groupby('responsavel').agg(
+            Total_Inspecionadas=('id', 'count'),
+            Aprovadas=('status', lambda x: (x == 'Concluída').sum()),  
+        ).reset_index()
+        
+        insp = insp.astype({'Total_Inspecionadas': 'int', 'Aprovadas': 'int'})
+        insp['Taxa_Aprovacao_%'] = (insp['Aprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
+        
+        # Adiciona coluna de Reprovadas (para ficar completo)
+        reprovadas = df_insp[df_insp['status'] == 'Concluída'].groupby('responsavel').size().reset_index(name='Reprovadas')
+        insp = insp.merge(reprovadas, on='responsavel', how='left').fillna(0)
+        insp['Taxa_Reprovacao_%'] = (insp['Reprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
+        
+        st.dataframe(insp[['responsavel', 'Total_Inspecionadas', 'Aprovadas', 'Reprovadas', 
+                          'Taxa_Aprovacao_%', 'Taxa_Reprovacao_%']], 
+                     use_container_width=True)
 
         # ====================== TOP 3 ======================
         with tab_top3:
