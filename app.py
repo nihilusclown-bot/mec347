@@ -452,9 +452,10 @@ if menu == "➕ Cadastrar Nova Peça":
                           (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", responsavel_selecionado, agora, obs))
                 conn.commit()
                 
-                # Guarda a mensagem e o QR (sem rerun)
+                # Salva e força atualização da tela
                 st.session_state.last_pdf = qr_code
                 st.session_state.mensagem_sucesso = f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**"
+                st.rerun()  
 
     # ==================== MENSAGEM + DOWNLOAD ====================
     if st.session_state.get("mensagem_sucesso"):
