@@ -810,21 +810,18 @@ elif menu == "📈 Produtividade":
     df_hist = pd.read_sql("""
         SELECT h.*, p.etapa as etapa_atual,
                substr(h.data,7,4) || '-' || substr(h.data,4,2) as mes
-        FROM historico h 
+        FROM historico h
         LEFT JOIN pecas p ON h.qr_code = p.qr_code
     """, conn)
     
     if df_hist.empty:
         st.info("Ainda não há dados de produtividade.")
     else:
-        # Filtro sem duplicação do mês atual
         meses_unicos = sorted(df_hist['mes'].unique(), reverse=True)
         mes_atual = datetime.now().strftime("%Y-%m")
-        
         meses_anteriores = [m for m in meses_unicos if m != mes_atual]
         
         opcoes_filtro = ["Mês Atual", "Acumulado do Ano", "─"] + meses_anteriores
-        
         periodo = st.selectbox("Período", opcoes_filtro, index=0)
         
         # Aplica filtro
@@ -860,36 +857,33 @@ elif menu == "📈 Produtividade":
             
             st.dataframe(op, use_container_width=True)
 
-       # ====================== INSPETORES ======================
-with tab_insp:
-    st.subheader("Desempenho dos Inspetores")
-        
-    df_insp = pd.read_sql("""
-        SELECT h.responsavel, h.status, h.id
-        FROM historico h
-        WHERE h.status IN ('Atualizado', 'Concluída')
-          AND h.responsavel LIKE 'Inspetor de Qualidade%'
-    """, conn)
-    
-    if df_insp.empty:
-        st.info("Ainda não há atualizações de Inspetores.")
-    else:
-        insp = df_insp.groupby('responsavel').agg(
-            Total_Inspecionadas=('id', 'count'),
-            Aprovadas=('status', lambda x: (x == 'Concluída').sum()),  
-        ).reset_index()
-        
-        insp = insp.astype({'Total_Inspecionadas': 'int', 'Aprovadas': 'int'})
-        insp['Taxa_Aprovacao_%'] = (insp['Aprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
-        
-        # Adiciona coluna de Reprovadas (para ficar completo)
-        reprovadas = df_insp[df_insp['status'] == 'Concluída'].groupby('responsavel').size().reset_index(name='Reprovadas')
-        insp = insp.merge(reprovadas, on='responsavel', how='left').fillna(0)
-        insp['Taxa_Reprovacao_%'] = (insp['Reprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
-        
-        st.dataframe(insp[['responsavel', 'Total_Inspecionadas', 'Aprovadas', 'Reprovadas', 
-                          'Taxa_Aprovacao_%', 'Taxa_Reprovacao_%']], 
-                     use_container_width=True)
+        # ====================== INSPETORES ======================
+        with tab_insp:
+            st.subheader("Desempenho dos Inspetores")
+            df_insp = pd.read_sql("""
+                SELECT h.responsavel, h.status, h.id
+                FROM historico h
+                WHERE h.status IN ('Atualizado', 'Concluída')
+                  AND h.responsavel LIKE 'Inspetor de Qualidade%'
+            """, conn)
+            
+            if df_insp.empty:
+                st.info("Ainda não há atualizações de Inspetores.")
+            else:
+                insp = df_insp.groupby('responsavel').agg(
+                    Total_Inspecionadas=('id', 'count'),
+                    Aprovadas=('status', lambda x: (x == 'Concluída').sum()),
+                ).reset_index()
+                
+                insp = insp.astype({'Total_Inspecionadas': 'int', 'Aprovadas': 'int'})
+                insp['Taxa_Aprovacao_%'] = (insp['Aprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
+                
+                reprovadas = df_insp[df_insp['status'] == 'Concluída'].groupby('responsavel').size().reset_index(name='Reprovadas')
+                insp = insp.merge(reprovadas, on='responsavel', how='left').fillna(0)
+                insp['Taxa_Reprovacao_%'] = (insp['Reprovadas'] / insp['Total_Inspecionadas'] * 100).round(1)
+                
+                st.dataframe(insp[['responsavel', 'Total_Inspecionadas', 'Aprovadas', 'Reprovadas',
+                                  'Taxa_Aprovacao_%', 'Taxa_Reprovacao_%']], use_container_width=True)
 
         # ====================== TOP 3 ======================
         with tab_top3:
@@ -902,47 +896,40 @@ with tab_insp:
             st.dataframe(top_insp, use_container_width=True)
 
         # ====================== RANKING GERAL ======================
-with tab_geral:
-    st.subheader("📊 Ranking Geral da Fábrica")
-    
-    # Query direta na tabela pecas (mais confiável)
-    df_pecas_periodo = pd.read_sql("""
-        SELECT resultado, etapa, data_cadastro 
-        FROM pecas 
-        WHERE resultado IS NOT NULL
-    """, conn)
-    
-    # Aplica filtro de período 
-    if periodo == "Mês Atual":
-        mes_atual = datetime.now().strftime("%Y-%m")
-        df_pecas_periodo = df_pecas_periodo[
-            df_pecas_periodo['data_cadastro'].str[:7] == mes_atual.replace('-', '/')
-        ]
-    elif periodo != "Acumulado do Ano" and periodo != "─":
-        df_pecas_periodo = df_pecas_periodo[
-            df_pecas_periodo['data_cadastro'].str[:7] == periodo.replace('-', '/')
-        ]
-    
-    geral = pd.DataFrame({
-        'Métrica': [
-            'Total de Peças Cadastradas',
-            'Em Inspeção Preliminar',
-            'Em Retrabalho/Não Conforme',
-            'Em Inspeção Final',
-            '✅ Aprovadas',
-            '❌ Reprovadas'
-        ],
-        'Quantidade': [
-            len(pd.read_sql("SELECT qr_code FROM pecas", conn)),  # total real cadastradas
-            len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Preliminar']),
-            len(df_filtrado[df_filtrado['etapa_atual'] == 'Retrabalho/Não Conforme']),
-            len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Final']),
-            len(df_pecas_periodo[df_pecas_periodo['resultado'] == 'Aprovado']),
-            len(df_pecas_periodo[df_pecas_periodo['resultado'] == 'Reprovado'])
-        ]
-    })
-    
-    st.dataframe(geral, use_container_width=True, hide_index=True)
+        with tab_geral:
+            st.subheader("📊 Ranking Geral da Fábrica")
+            
+            df_pecas_periodo = pd.read_sql("""
+                SELECT resultado, etapa, data_cadastro 
+                FROM pecas 
+                WHERE resultado IS NOT NULL
+            """, conn)
+            
+            if periodo == "Mês Atual":
+                mes_atual = datetime.now().strftime("%Y-%m")
+                df_pecas_periodo = df_pecas_periodo[df_pecas_periodo['data_cadastro'].str[:7] == mes_atual.replace('-', '/')]
+            elif periodo != "Acumulado do Ano" and periodo != "─":
+                df_pecas_periodo = df_pecas_periodo[df_pecas_periodo['data_cadastro'].str[:7] == periodo.replace('-', '/')]
+            
+            geral = pd.DataFrame({
+                'Métrica': [
+                    'Total de Peças Cadastradas',
+                    'Em Inspeção Preliminar',
+                    'Em Retrabalho/Não Conforme',
+                    'Em Inspeção Final',
+                    '✅ Aprovadas',
+                    '❌ Reprovadas'
+                ],
+                'Quantidade': [
+                    len(pd.read_sql("SELECT qr_code FROM pecas", conn)),
+                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Preliminar']),
+                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Retrabalho/Não Conforme']),
+                    len(df_filtrado[df_filtrado['etapa_atual'] == 'Inspeção Final']),
+                    len(df_pecas_periodo[df_pecas_periodo['resultado'] == 'Aprovado']),
+                    len(df_pecas_periodo[df_pecas_periodo['resultado'] == 'Reprovado'])
+                ]
+            })
+            st.dataframe(geral, use_container_width=True, hide_index=True)
 
 # ==================== GERAR ETIQUETA ====================
 elif menu == "🖨️ Gerar Etiqueta":
@@ -954,19 +941,19 @@ elif menu == "🖨️ Gerar Etiqueta":
         WHERE resultado IS NULL OR resultado = ''
         ORDER BY data_cadastro DESC
     """, conn)
-     
+    
     opcoes = ["🔍 Digitar código manualmente"] + [
         f"{row['qr_code']} - {row['tipo_peca']}"
         for _, row in df_nao_concluidas.iterrows()
     ]
-   
+    
     escolha = st.selectbox("Selecione a peça ou digite o código", opcoes)
-       
+    
     if escolha == "🔍 Digitar código manualmente":
         qr_input = st.text_input("Digite o QR Code da peça manualmente")
     else:
         qr_input = escolha.split(" - ")[0]
-   
+    
     if qr_input:
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr_input}'", conn)
         if not df.empty:
