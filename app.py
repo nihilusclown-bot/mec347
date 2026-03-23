@@ -413,11 +413,11 @@ if menu == "➕ Cadastrar Nova Peça":
     
     st.header("Cadastrar Nova Peça")
     
-    # ==================== MENSAGEM DE SUCESSO + DOWNLOAD ====================
+    # ==================== TELA DE SUCESSO ====================
     if st.session_state.get("mensagem_sucesso"):
         st.success(st.session_state.mensagem_sucesso)
         st.divider()
-        st.subheader("📄 Etiqueta Gerada")
+        st.subheader("📄 Etiqueta Gerada com Sucesso!")
         
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
@@ -448,7 +448,7 @@ if menu == "➕ Cadastrar Nova Peça":
                 use_container_width=True
             )
             
-            if st.button("🧹 Cadastrar Nova Peça", type="secondary", use_container_width=True):
+            if st.button("🧹 Limpar e cadastrar nova peça", type="secondary", use_container_width=True):
                 for key in ["last_pdf", "mensagem_sucesso", "cad_tipo", "cad_etapa", "cad_obs", "cad_desenho"]:
                     if key in st.session_state:
                         del st.session_state[key]
@@ -497,7 +497,6 @@ if menu == "➕ Cadastrar Nova Peça":
                     st.session_state.last_pdf = qr_code
                     st.session_state.mensagem_sucesso = f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**"
                     st.rerun()
-
           
 # ==================== ATUALIZAR STATUS ====================
 elif menu == "🔄 Atualizar Status":
