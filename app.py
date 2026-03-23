@@ -581,17 +581,17 @@ elif menu == "🔄 Atualizar Status":
         else:
             st.error("QR Code não encontrado!")
 
-    # ==================== BOTÃO DE DOWNLOAD DA ETIQUETA ====================
+       # ==================== BOTÃO DE DOWNLOAD DA ETIQUETA ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
         if not df.empty:
             peca = df.iloc[0]
             
-              img = gerar_etiqueta(
+            img = gerar_etiqueta(
                 qr_code=qr,
                 tipo_peca=peca["tipo_peca"],
-                cadastrado_por=peca["cadastrado_por"],      
+                cadastrado_por=peca.get("cadastrado_por", peca["responsavel"]),
                 responsavel=peca["responsavel"],
                 data_cadastro=peca["data_cadastro"],
                 etapa_atual=peca["etapa"],
@@ -912,11 +912,11 @@ elif menu == "🖨️ Gerar Etiqueta":
         if not df.empty:
             peca = df.iloc[0]
             
-            if st.button("Gerar Etiqueta"):
-                    img = gerar_etiqueta(
+                        if st.button("Gerar Etiqueta"):
+                img = gerar_etiqueta(
                     qr_code=qr_input,
                     tipo_peca=peca["tipo_peca"],
-                    cadastrado_por=peca["cadastrado_por"],     
+                    cadastrado_por=peca.get("cadastrado_por", peca["responsavel"]),
                     responsavel=peca["responsavel"],
                     data_cadastro=peca["data_cadastro"],
                     etapa_atual=peca["etapa"],
