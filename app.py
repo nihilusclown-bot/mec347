@@ -14,7 +14,7 @@ conn = sqlite3.connect("pecas.db", check_same_thread=False)
 c = conn.cursor()
 
 c.execute('''CREATE TABLE IF NOT EXISTS users (
-             id INTEGER PRIMARY KEY, nome TEXT UNIQUE, email TEXT, senha TEXT, 
+             id INTEGER PRIMARY KEY, nome TEXT UNIQUE, email TEXT, senha TEXT,
              funcao TEXT, funcao_custom TEXT)''')
 
 c.execute('''CREATE TABLE IF NOT EXISTS pecas (
@@ -24,12 +24,12 @@ c.execute('''CREATE TABLE IF NOT EXISTS pecas (
              status TEXT,
              etapa TEXT,
              responsavel TEXT,
-             cadastrado_por TEXT,          
+             cadastrado_por TEXT,           
              data_cadastro TEXT,
              resultado TEXT,
              data_conclusao TEXT,
              responsavel_conclusao TEXT,
-             desenho_tecnico BLOB)''')   
+             desenho_tecnico BLOB)''')
 
 c.execute('''CREATE TABLE IF NOT EXISTS historico (
              id INTEGER PRIMARY KEY,
@@ -41,6 +41,14 @@ c.execute('''CREATE TABLE IF NOT EXISTS historico (
              responsavel TEXT,
              data TEXT,
              observacao TEXT)''')
+
+# Migração automática (roda só uma vez)
+try:
+    c.execute("ALTER TABLE pecas ADD COLUMN cadastrado_por TEXT")
+    conn.commit()
+    print("✅ Coluna 'cadastrado_por' adicionada com sucesso!")
+except sqlite3.OperationalError:
+    pass  
 
 conn.commit()
 
@@ -413,6 +421,15 @@ if menu == "➕ Cadastrar Nova Peça":
     
     st.header("Cadastrar Nova Peça")
     
+    # Quem está cadastrando (sempre o usuário logado)
+    cadastrado_por_full = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
+    
+    if st.session_state.user['funcao'] in ["Gestor", "Supervisor", "Administrador"]:
+        operadores = pd.read_sql("SELECT nome FROM users WHERE funcao = 'Operador'", conn)["nome"].tolist()
+        responsavel_selecionado = st.selectbox("Operador responsável pela peça", operadores, key="resp_cadastro")
+    else:
+        responsavel_selecionado = f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
+    
     # ==================== TELA DE SUCESSO ====================
     if st.session_state.get("mensagem_sucesso"):
         st.success(st.session_state.mensagem_sucesso)
@@ -427,8 +444,8 @@ if menu == "➕ Cadastrar Nova Peça":
             img = gerar_etiqueta(
                 qr_code=qr,
                 tipo_peca=peca["tipo_peca"],
-                cadastrado_por=responsavel_selecionado,
-                responsavel=responsavel_selecionado,
+                cadastrado_por=peca.get("cadastrado_por", cadastrado_por_full),  
+                responsavel=peca["responsavel"],                                 
                 data_cadastro=peca["data_cadastro"],
                 etapa_atual=peca["etapa"],
                 data_atualizacao=peca["data_cadastro"],
@@ -456,12 +473,6 @@ if menu == "➕ Cadastrar Nova Peça":
     
     # ==================== FORMULÁRIO ====================
     else:
-        if st.session_state.user['funcao'] in ["Gestor", "Supervisor", "Administrador"]:
-            operadores = pd.read_sql("SELECT nome FROM users WHERE funcao = 'Operador'", conn)["nome"].tolist()
-            responsavel_selecionado = st.selectbox("Operador responsável pela peça", operadores, key="resp_cadastro")
-        else:
-            responsavel_selecionado = st.session_state.user['nome']
-        
         with st.form("cadastro_nova_peca", clear_on_submit=True):
             tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)", key="cad_tipo")
             etapa_inicial = st.selectbox("Etapa Inicial", 
@@ -482,11 +493,11 @@ if menu == "➕ Cadastrar Nova Peça":
                     desenho_bytes = desenho.read() if desenho else None
                     
                     c.execute("""INSERT INTO pecas 
-                                 (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, 
+                                 (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, cadastrado_por,
                                   data_cadastro, resultado, data_conclusao, responsavel_conclusao, desenho_tecnico)
-                                 VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
                               (qr_code, tipo, etapa_inicial, "Em andamento", etapa_inicial, 
-                               responsavel_selecionado, agora, None, None, None, desenho_bytes))
+                               responsavel_selecionado, cadastrado_por_full, agora, None, None, None, desenho_bytes))
                     
                     c.execute("""INSERT INTO historico 
                                  (qr_code, tipo_peca, etapa, cor, status, responsavel, data, observacao) 
