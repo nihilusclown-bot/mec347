@@ -552,7 +552,6 @@ elif menu == "🔄 Atualizar Status":
                                      VALUES (?,?,?,?,?,?,?,?)""",
                                   (qr_input, peca['tipo_peca'], nova_etapa, nova_etapa, "Atualizado", responsavel_full, agora, nova_obs))
                         conn.commit()
-                        st.session_state.last_pdf = qr_input   
                         st.toast("✅ Status atualizado!", icon="🎉")
                         st.rerun()
                 
@@ -575,13 +574,12 @@ elif menu == "🔄 Atualizar Status":
                                   (qr_input, peca['tipo_peca'], peca['etapa'], peca['cor_atual'],
                                    "Concluída", responsavel, agora, f"Resultado: {resultado_final} | {obs_conclusao}"))
                         conn.commit()
-                        st.session_state.last_pdf = qr_input   
                         st.success(f"Peça concluída como **{resultado_final}**!")
                         st.rerun()
         else:
             st.error("QR Code não encontrado!")
 
-           # ==================== BOTÃO DE DOWNLOAD DA ETIQUETA ====================
+    # ==================== DOWNLOAD DA ETIQUETA ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
