@@ -588,15 +588,15 @@ elif menu == "🔄 Atualizar Status":
         if not df.empty:
             peca = df.iloc[0]
             
-            img = gerar_etiqueta(
+              img = gerar_etiqueta(
                 qr_code=qr,
                 tipo_peca=peca["tipo_peca"],
-                cadastrado_por=peca.get("cadastrado_por", peca["responsavel"]),
+                cadastrado_por=peca["cadastrado_por"],      
                 responsavel=peca["responsavel"],
                 data_cadastro=peca["data_cadastro"],
                 etapa_atual=peca["etapa"],
                 data_atualizacao=peca.get("data_conclusao") or peca["data_cadastro"],
-                atualizado_por=peca["responsavel"]
+                atualizado_por=f"{st.session_state.user['funcao']} - {st.session_state.user['nome']}"
             )
             
             buf = io.BytesIO()
@@ -913,15 +913,15 @@ elif menu == "🖨️ Gerar Etiqueta":
             peca = df.iloc[0]
             
             if st.button("Gerar Etiqueta"):
-                img = gerar_etiqueta(
+                    img = gerar_etiqueta(
                     qr_code=qr_input,
                     tipo_peca=peca["tipo_peca"],
-                    cadastrado_por=peca.get("cadastrado_por", peca["responsavel"]),
+                    cadastrado_por=peca["cadastrado_por"],     
                     responsavel=peca["responsavel"],
                     data_cadastro=peca["data_cadastro"],
                     etapa_atual=peca["etapa"],
                     data_atualizacao=peca.get("data_conclusao") or peca["data_cadastro"],
-                    atualizado_por=peca["responsavel"]
+                    atualizado_por=peca.get("responsavel", "—")
                 )
                 st.image(img, caption="Pré-visualização da Etiqueta", use_container_width=True)
                 
