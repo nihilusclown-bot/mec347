@@ -824,7 +824,6 @@ elif menu == "📈 Produtividade":
         opcoes_filtro = ["Mês Atual", "Acumulado do Ano", "─"] + meses_anteriores
         periodo = st.selectbox("Período", opcoes_filtro, index=0)
         
-        # Aplica filtro
         if periodo == "Mês Atual":
             df_filtrado = df_hist[df_hist['mes'] == mes_atual]
         elif periodo == "Acumulado do Ano":
@@ -860,6 +859,7 @@ elif menu == "📈 Produtividade":
         # ====================== INSPETORES ======================
         with tab_insp:
             st.subheader("Desempenho dos Inspetores")
+            
             df_insp = pd.read_sql("""
                 SELECT h.responsavel, h.status, h.id
                 FROM historico h
@@ -869,6 +869,7 @@ elif menu == "📈 Produtividade":
             
             if df_insp.empty:
                 st.info("Ainda não há atualizações de Inspetores.")
+                insp = pd.DataFrame()  
             else:
                 insp = df_insp.groupby('responsavel').agg(
                     Total_Inspecionadas=('id', 'count'),
@@ -888,11 +889,11 @@ elif menu == "📈 Produtividade":
         # ====================== TOP 3 ======================
         with tab_top3:
             st.subheader("🏆 Top 3 Operadores")
-            top_op = op.nlargest(3, 'Total_Cadastradas')[['responsavel', 'Total_Cadastradas', 'Taxa_Aprovacao_%', 'Taxa_Conclusao_%']]
+            top_op = op.nlargest(3, 'Total_Cadastradas')[['responsavel', 'Total_Cadastradas', 'Taxa_Aprovacao_%', 'Taxa_Conclusao_%']] if not op.empty else pd.DataFrame()
             st.dataframe(top_op, use_container_width=True)
             
             st.subheader("🏆 Top 3 Inspetores")
-            top_insp = insp.nlargest(3, 'Total_Inspecionadas')[['responsavel', 'Total_Inspecionadas', 'Taxa_Aprovacao_%']]
+            top_insp = insp.nlargest(3, 'Total_Inspecionadas')[['responsavel', 'Total_Inspecionadas', 'Taxa_Aprovacao_%']] if not insp.empty else pd.DataFrame()
             st.dataframe(top_insp, use_container_width=True)
 
         # ====================== RANKING GERAL ======================
