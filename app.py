@@ -413,51 +413,7 @@ if menu == "➕ Cadastrar Nova Peça":
     
     st.header("Cadastrar Nova Peça")
     
-    if st.session_state.user['funcao'] in ["Gestor", "Supervisor", "Administrador"]:
-        operadores = pd.read_sql("SELECT nome FROM users WHERE funcao = 'Operador'", conn)["nome"].tolist()
-        responsavel_selecionado = st.selectbox("Operador responsável pela peça", operadores, key="resp_cadastro")
-    else:
-        responsavel_selecionado = st.session_state.user['nome']
-    
-    # ==================== FORMULÁRIO ====================
-    with st.form("cadastro_nova_peca", clear_on_submit=True):
-        tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)", key="cad_tipo")
-        etapa_inicial = st.selectbox("Etapa Inicial", 
-                                   ["Usinagem", "Tratamento/Intermediário"], 
-                                   key="cad_etapa")
-        obs = st.text_area("Observações iniciais", key="cad_obs")
-        desenho = st.file_uploader("Desenho Técnico (PDF ou Imagem)", 
-                                 type=["pdf", "png", "jpg", "jpeg"], 
-                                 key="cad_desenho")
-        submitted = st.form_submit_button("Cadastrar Peça", use_container_width=True)
-        
-        if submitted:
-            if not tipo:
-                st.error("❌ O Tipo da Peça é obrigatório!")
-            else:
-                qr_code = f"PECA-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-                agora = datetime.now().strftime("%d/%m/%Y %H:%M")
-                desenho_bytes = desenho.read() if desenho else None
-                
-                c.execute("""INSERT INTO pecas 
-                             (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, 
-                              data_cadastro, resultado, data_conclusao, responsavel_conclusao, desenho_tecnico)
-                             VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
-                          (qr_code, tipo, etapa_inicial, "Em andamento", etapa_inicial, 
-                           responsavel_selecionado, agora, None, None, None, desenho_bytes))
-                
-                c.execute("""INSERT INTO historico 
-                             (qr_code, tipo_peca, etapa, cor, status, responsavel, data, observacao) 
-                             VALUES (?,?,?,?,?,?,?,?)""",
-                          (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", responsavel_selecionado, agora, obs))
-                conn.commit()
-                
-                # Salva e força atualização da tela
-                st.session_state.last_pdf = qr_code
-                st.session_state.mensagem_sucesso = f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**"
-                st.rerun()  
-
-    # ==================== MENSAGEM + DOWNLOAD ====================
+    # ==================== MENSAGEM DE SUCESSO + DOWNLOAD ====================
     if st.session_state.get("mensagem_sucesso"):
         st.success(st.session_state.mensagem_sucesso)
         st.divider()
@@ -497,6 +453,51 @@ if menu == "➕ Cadastrar Nova Peça":
                     if key in st.session_state:
                         del st.session_state[key]
                 st.rerun()
+    
+    # ==================== FORMULÁRIO ====================
+    else:
+        if st.session_state.user['funcao'] in ["Gestor", "Supervisor", "Administrador"]:
+            operadores = pd.read_sql("SELECT nome FROM users WHERE funcao = 'Operador'", conn)["nome"].tolist()
+            responsavel_selecionado = st.selectbox("Operador responsável pela peça", operadores, key="resp_cadastro")
+        else:
+            responsavel_selecionado = st.session_state.user['nome']
+        
+        with st.form("cadastro_nova_peca", clear_on_submit=True):
+            tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)", key="cad_tipo")
+            etapa_inicial = st.selectbox("Etapa Inicial", 
+                                       ["Usinagem", "Tratamento/Intermediário"], 
+                                       key="cad_etapa")
+            obs = st.text_area("Observações iniciais", key="cad_obs")
+            desenho = st.file_uploader("Desenho Técnico (PDF ou Imagem)", 
+                                     type=["pdf", "png", "jpg", "jpeg"], 
+                                     key="cad_desenho")
+            submitted = st.form_submit_button("Cadastrar Peça", use_container_width=True)
+            
+            if submitted:
+                if not tipo:
+                    st.error("❌ O Tipo da Peça é obrigatório!")
+                else:
+                    qr_code = f"PECA-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                    agora = datetime.now().strftime("%d/%m/%Y %H:%M")
+                    desenho_bytes = desenho.read() if desenho else None
+                    
+                    c.execute("""INSERT INTO pecas 
+                                 (qr_code, tipo_peca, cor_atual, status, etapa, responsavel, 
+                                  data_cadastro, resultado, data_conclusao, responsavel_conclusao, desenho_tecnico)
+                                 VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                              (qr_code, tipo, etapa_inicial, "Em andamento", etapa_inicial, 
+                               responsavel_selecionado, agora, None, None, None, desenho_bytes))
+                    
+                    c.execute("""INSERT INTO historico 
+                                 (qr_code, tipo_peca, etapa, cor, status, responsavel, data, observacao) 
+                                 VALUES (?,?,?,?,?,?,?,?)""",
+                              (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", responsavel_selecionado, agora, obs))
+                    conn.commit()
+                    
+                    st.session_state.last_pdf = qr_code
+                    st.session_state.mensagem_sucesso = f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**"
+                    st.rerun()
+
           
 # ==================== ATUALIZAR STATUS ====================
 elif menu == "🔄 Atualizar Status":
