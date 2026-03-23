@@ -405,7 +405,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
 
     return img
                      
- # ==================== CADASTRAR NOVA PEÇA ====================
+# ==================== CADASTRAR NOVA PEÇA ====================
 if menu == "➕ Cadastrar Nova Peça":
     if st.session_state.user['funcao'] not in ["Operador", "Gestor", "Supervisor", "Administrador"]:
         st.error("❌ Você não tem permissão para cadastrar peças.")
@@ -452,12 +452,11 @@ if menu == "➕ Cadastrar Nova Peça":
                           (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", responsavel_selecionado, agora, obs))
                 conn.commit()
                 
-                # Guarda a mensagem para ficar visível
+                # Guarda a mensagem e o QR (sem rerun)
                 st.session_state.last_pdf = qr_code
                 st.session_state.mensagem_sucesso = f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**"
-                st.rerun()
 
-    # ==================== MENSAGEM FIXA + DOWNLOAD ====================
+    # ==================== MENSAGEM + DOWNLOAD ====================
     if st.session_state.get("mensagem_sucesso"):
         st.success(st.session_state.mensagem_sucesso)
         st.divider()
