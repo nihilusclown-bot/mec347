@@ -922,7 +922,7 @@ elif menu == "🖨️ Gerar Etiqueta":
                     atualizado_por=peca.get("responsavel", "—")
                 )
                 st.image(img, caption="Pré-visualização da Etiqueta", use_container_width=True)
-               
+                
                 buf = io.BytesIO()
                 img.save(buf, format="PDF", resolution=300)
                 buf.seek(0)
