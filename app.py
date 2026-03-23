@@ -147,7 +147,7 @@ if "user" not in st.session_state:
 
 if not st.session_state.user:
     st.title("🛠️ InspMax - Login")
-    st.markdown("**Projeto Integrador MEC-3-47**")
+    st.markdown("**Projeto Integrador MEC-4-47**")
     
     # ==================== LAYOUT COM VÍDEO PEQUENO ====================
     col_form, col_video = st.columns([3.3, 1])   
@@ -419,14 +419,12 @@ if menu == "➕ Cadastrar Nova Peça":
     else:
         responsavel_selecionado = st.session_state.user['nome']
     
+    # ==================== FORMULÁRIO ====================
     with st.form("cadastro_nova_peca", clear_on_submit=True):
         tipo = st.text_input("Tipo da Peça (ex: Eixo, Flange)", key="cad_tipo")
-        
-        # === LIBERADO: Tratamento/Intermediário ===
         etapa_inicial = st.selectbox("Etapa Inicial", 
                                    ["Usinagem", "Tratamento/Intermediário"], 
                                    key="cad_etapa")
-        
         obs = st.text_area("Observações iniciais", key="cad_obs")
         desenho = st.file_uploader("Desenho Técnico (PDF ou Imagem)", 
                                  type=["pdf", "png", "jpg", "jpeg"], 
@@ -453,20 +451,20 @@ if menu == "➕ Cadastrar Nova Peça":
                              VALUES (?,?,?,?,?,?,?,?)""",
                           (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", responsavel_selecionado, agora, obs))
                 conn.commit()
-                
-                st.success(f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**")
+                              
                 st.session_state.last_pdf = qr_code
-                st.rerun()
-  
-    # ==================== DOWNLOAD DA ETIQUETA ====================
+                st.session_state.ultimo_qr = qr_code
+
+    # ==================== MENSAGEM + DOWNLOAD ====================
     if st.session_state.get("last_pdf"):
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
         if not df.empty:
             peca = df.iloc[0]
             
+            st.success(f"✅ Peça cadastrada com sucesso! Código: **{qr}**")
             st.divider()
-            st.subheader("📄 Etiqueta Gerada com Sucesso!")
+            st.subheader("📄 Etiqueta Gerada")
             
             img = gerar_etiqueta(
                 qr_code=qr,
@@ -492,8 +490,8 @@ if menu == "➕ Cadastrar Nova Peça":
                 use_container_width=True
             )
             
-            if st.button("🧹 Limpar e cadastrar nova peça", type="secondary", use_container_width=True):
-                for key in ["cad_tipo", "cad_etapa", "cad_obs", "cad_desenho", "last_pdf"]:
+            if st.button("🧹 Cadastrar Nova Peça", type="secondary", use_container_width=True):
+                for key in ["last_pdf", "ultimo_qr", "cad_tipo", "cad_etapa", "cad_obs", "cad_desenho"]:
                     if key in st.session_state:
                         del st.session_state[key]
                 st.rerun()
