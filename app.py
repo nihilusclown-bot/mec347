@@ -405,7 +405,7 @@ def gerar_etiqueta(qr_code, tipo_peca, cadastrado_por, responsavel,
 
     return img
                      
-  # ==================== CADASTRAR NOVA PEÇA ====================
+ # ==================== CADASTRAR NOVA PEÇA ====================
 if menu == "➕ Cadastrar Nova Peça":
     if st.session_state.user['funcao'] not in ["Operador", "Gestor", "Supervisor", "Administrador"]:
         st.error("❌ Você não tem permissão para cadastrar peças.")
@@ -451,20 +451,22 @@ if menu == "➕ Cadastrar Nova Peça":
                              VALUES (?,?,?,?,?,?,?,?)""",
                           (qr_code, tipo, etapa_inicial, etapa_inicial, "Início", responsavel_selecionado, agora, obs))
                 conn.commit()
-                              
+                
+                # Guarda a mensagem para ficar visível
                 st.session_state.last_pdf = qr_code
-                st.session_state.ultimo_qr = qr_code
+                st.session_state.mensagem_sucesso = f"✅ Peça cadastrada com sucesso! Código: **{qr_code}**"
+                st.rerun()
 
-    # ==================== MENSAGEM + DOWNLOAD ====================
-    if st.session_state.get("last_pdf"):
+    # ==================== MENSAGEM FIXA + DOWNLOAD ====================
+    if st.session_state.get("mensagem_sucesso"):
+        st.success(st.session_state.mensagem_sucesso)
+        st.divider()
+        st.subheader("📄 Etiqueta Gerada")
+        
         qr = st.session_state.last_pdf
         df = pd.read_sql(f"SELECT * FROM pecas WHERE qr_code = '{qr}'", conn)
         if not df.empty:
             peca = df.iloc[0]
-            
-            st.success(f"✅ Peça cadastrada com sucesso! Código: **{qr}**")
-            st.divider()
-            st.subheader("📄 Etiqueta Gerada")
             
             img = gerar_etiqueta(
                 qr_code=qr,
@@ -491,7 +493,7 @@ if menu == "➕ Cadastrar Nova Peça":
             )
             
             if st.button("🧹 Cadastrar Nova Peça", type="secondary", use_container_width=True):
-                for key in ["last_pdf", "ultimo_qr", "cad_tipo", "cad_etapa", "cad_obs", "cad_desenho"]:
+                for key in ["last_pdf", "mensagem_sucesso", "cad_tipo", "cad_etapa", "cad_obs", "cad_desenho"]:
                     if key in st.session_state:
                         del st.session_state[key]
                 st.rerun()
